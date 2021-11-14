@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String    @unique
+  emailVerified Boolean @default(false)
+  name         String
+  joinDate     DateTime  @default(now())
+  editDate     DateTime?
+  passwordHash String
+  logouts      Int @default(0)
+  recipes      Recipe[]  @relation(name: "Recipes")
+  ratings      Rating[]
+  following    Follow[]  @relation(name: "Following")
+  followers    Follow[]  @relation(name: "Follower")
+  savedRecipes Save[]    @relation(name: "Saved")
+  image        Image[]   @relation("Uploader")
+}
+
+model Recipe {
+  id                                 String                   @id @default(uuid())
+  author                             User                     @relation(name: "Recipes", fields: [authorId], references: [id])
+  authorId                           String
+  ratings                            Rating[]
+  saves                              Save[]
+  prepTime                           Int
+  cookTime                           Int
+  uploadDate                         DateTime                 @default(now())
+  editDate                           DateTime?
+  name                               String
+  description                        String?
+  keywords                           String[]
+  calories                           Int?
+  category                           String?
+  cuisine                            String?
+  ingredients                        QuantitativeIngredient[] @relation(name: "Ingredients")
+  instructions                       Instruction[]
+  yield                              QuantitativeIngredient?  @relation(fields: [quantitativeIngredientRecipeId, quantitativeIngredientIngredientId], references: [recipeId, ingredientId])
+  Ingredient                         Ingredient?              @relation(fields: [ingredientId], references: [id])
+  ingredientId                       String?
+  quantitativeIngredientRecipeId     String?
+  quantitativeIngredientIngredientId String?
+}
+
+model Rating {
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId String
+  rating   Int
+
+  @@unique([authorId, recipeId])
+}
+
+model Follow {
+  follower   User   @relation(name: "Follower", fields: [followerId], references: [id])
+  followerId String
+  followed   User   @relation(name: "Following", fields: [followedId], references: [id])
+  followedId String
+
+  @@unique([followerId, followedId])
+}
+
+model Save {
+  user     User   @relation(name: "Saved", fields: [userId], references: [id])
+  userId   String
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId String
+
+  @@unique([userId, recipeId])
+}
+
+model QuantitativeIngredient {
+  recipe       Recipe     @relation(name: "Ingredients", fields: [recipeId], references: [id])
+  recipeId     String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId String
+  amount       Float
+  unit         String
+
+  @@unique([recipeId, ingredientId])
+  Recipe Recipe[]
+}
+
+model Ingredient {
+  id                     String                   @id @default(uuid())
+  name                   String                   @unique
+  images                 Image[]
+  recipes                Recipe[]
+  QuantitativeIngredient QuantitativeIngredient[]
+}
+
+model Image {
+  alt          String?
+  url          String        @unique
+  uploader     User          @relation(name: "Uploader", fields: [uploaderId], references: [id])
+  uploaderId   String
+  Ingredient   Ingredient?   @relation(fields: [ingredientId], references: [id])
+  ingredientId String?
+  Instruction  Instruction[]
+}
+
+model Instruction {
+  recipe   Recipe  @relation(fields: [recipeId], references: [id])
+  recipeId String
+  name     String?
+  text     String
+  url      String  @unique
+  image    Image?  @relation(fields: [imageUrl], references: [url])
+  tip      Boolean
+  imageUrl String?
+}
