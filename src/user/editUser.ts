@@ -1,5 +1,5 @@
 import { AuthenticationError, UserInputError } from "apollo-server-express";
-import { prisma } from "../app";
+import { prisma, s3 } from "../app";
 
 export const editUser = async (
   _: any,
@@ -10,7 +10,7 @@ export const editUser = async (
   const validationErrors: any = {};
 
   // If the user is not logged in.
-  if (!id) throw new AuthenticationError("Already logged in.");
+  if (!id) throw new AuthenticationError("Not logged in.");
 
   // Checks if an image was entered.
   if (image) {
@@ -18,8 +18,31 @@ export const editUser = async (
     if (image.imageBase64.length > 10 * 1000000) {
       validationErrors.image = "Image must be less than 10MB.";
     }
-    // TODO implement images.
-    validationErrors.image = "Images have not yet been implemented";
+    let buffer;
+    try {
+      buffer = Buffer.from(
+        image.imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+        "base64"
+      );
+    } catch (error) {
+      validationErrors.image = "Image must be a valid image.";
+    }
+    try {
+      s3.putObject(
+        {
+          Bucket: process.env.AWS_S3_BUCKET ?? "",
+          Key: `${id}/profile.png`,
+          Body: buffer,
+          ContentEncoding: "base64",
+          ContentType: image.imageBase64.match(/image\/(\w+)(?=;)/)?.[1] ?? "",
+        },
+        (data, err) => {
+          console.log(data, err);
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 
   const user: any = await prisma.user.findUnique({
@@ -37,23 +60,48 @@ export const editUser = async (
   console.log(user);
 
   if (user?.logouts !== logouts)
-    throw new AuthenticationError("Session is expired.");
+    throw new AuthenticationError'Session is expired.'");
 
   // Check new username is different from old username.
   if (user?.username === username)
-    validationErrors.username = "Username is already in use.";
+    validationErrors.username ='Username is already in use.'";
 
-  if (user?.name === name) validationErrors.name = "Name is already in use.";
+  if (user?.name === name) validationErrors.name ='Name is already in use.'";
+
+  await prisma.image.upsert({
+    where: {
+      url: `https://${process.env.AWS_S3_BUCKET ??''"}.s3.${
+        process.env.AWS_REGION
+      }.amazonaws.com/${id}/profile.png,
+    },
+    update: {
+      alt: image.al,
+    },
+    create: {
+      url: `https://${process.env.AWS_S3_BUCKET ??''"}.s3.${
+        process.env.AWS_REGION
+      }.amazonaws.com/${id}/profile.png`,
+      alt: image.alt,
+      uploader: {
+        connect: {
+          i,
+        ,
+      ,
+    },
+    include: {
+      uploader: tru,
+    ,
+  });
 
   // If the creation of the user fails.
   await prisma.user
     .update({
       where: {
-        id,
+        i,
       },
       data: {
         name,
-        username,
+        usernam,
       },
     })
     // If updating the user fails
