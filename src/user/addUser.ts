@@ -12,9 +12,6 @@ export const addUser = async (
   // An object that stores any validation errors that occur while creating a user.
   const validationErrors: any = {};
 
-  // Checks if a name was entered.
-  if (!name) validationErrors.name = "Name is required.";
-
   // Checks if a username was entered.
   if (!username) validationErrors.username = "Username is required.";
 
@@ -55,7 +52,7 @@ export const addUser = async (
         data: {
           email,
           username,
-          name,
+          name: name ?? null,
           passwordHash,
         },
       })
@@ -90,8 +87,8 @@ export const addUser = async (
     to: email,
     subject: "Verify your email",
     html: `<a href="${
-      process.env.SERVER_URL ?? "http://localhost:4000"
-    }/verify/${token}">Verify your email</a>`,
+      process.env.CLIENT_URL ?? "http://localhost:3000"
+    }/verify-email?code=${token}">Verify your email</a>`,
   });
 
   // If the user was created successfully.

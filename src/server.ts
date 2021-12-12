@@ -27,12 +27,13 @@ export async function startApolloServer(
   });
 
   // Email confirmation
-  app.use("/verify/:token", async ({ params: { token } }, _, next) => {
+  app.use("/verify/:token", async ({ params: { token } }, res, next) => {
     // Gets the id for the email verification from Redis.
     const id: string = (await redis.get(token)) as string;
 
     // If the id is not found, do nothing.
     if (!id) {
+      res.send(false);
       return next();
     }
 
@@ -47,6 +48,7 @@ export async function startApolloServer(
       },
     });
 
+    res.send(true);
     return next();
   });
 
