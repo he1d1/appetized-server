@@ -60,13 +60,13 @@ export const editUser = async (
   console.log(user);
 
   if (user?.logouts !== logouts)
-    throw new AuthenticationError'Session is expired.'");
+    throw new AuthenticationError("Session is expired.");
 
   // Check new username is different from old username.
   if (user?.username === username)
-    validationErrors.username ='Username is already in use.'";
+    validationErrors.username = "Username is already in use.";
 
-  if (user?.name === name) validationErrors.name ='Name is already in use.'";
+  if (user?.name === name) validationErrors.name = "Name is already in use.";
 
   await prisma.image.upsert({
     where: {
@@ -97,11 +97,11 @@ export const editUser = async (
   await prisma.user
     .update({
       where: {
-        i,
+        id,
       },
       data: {
         name,
-        usernam,
+        username,
       },
     })
     // If updating the user fails
