@@ -35,7 +35,7 @@ export default gql`
 
   type User {
     id: ID!
-    name: String!
+    name: String
     username: String!
     joinDate: Date!
     editDate: Date
@@ -149,7 +149,8 @@ export default gql`
     | Response
 
   type Query {
-    getContext: String
+    authed: Boolean!
+    getUser(id: ID): User!
   }
 
   type Mutation {

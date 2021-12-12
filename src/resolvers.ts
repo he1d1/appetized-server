@@ -1,7 +1,18 @@
-import { addUser, deleteUser, editUser, login, logout } from "./user";
+import {
+  addUser,
+  authed,
+  deleteUser,
+  editUser,
+  getUser,
+  login,
+  logout,
+} from "./user";
 
 export default {
-  Query: {},
+  Query: {
+    authed,
+    getUser,
+  },
   Mutation: {
     addUser,
     deleteUser,

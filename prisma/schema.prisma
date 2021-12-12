@@ -15,7 +15,7 @@ model User {
   username     String    @unique
   email        String    @unique
   emailVerified Boolean @default(false)
-  name         String
+  name         String?
   joinDate     DateTime  @default(now())
   editDate     DateTime?
   passwordHash String
