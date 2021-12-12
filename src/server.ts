@@ -19,6 +19,8 @@ export async function startApolloServer(
   // This creates req.cookies
   app.use(cookieParser());
 
+  app.use(express.json({ limit: "11mb" }));
+
   app.use((res, req, next) => {
     // This is required for Apollo Server to work with Express.
     // @ts-ignore
