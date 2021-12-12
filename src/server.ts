@@ -66,7 +66,10 @@ export async function startApolloServer(
     app,
     path: "/",
     cors: {
-      origin: "https://studio.apollographql.com",
+      origin:
+        process.env.NODE_ENV === "development"
+          ? "https://studio.apollographql.com"
+          : "http://localhost:3000",
       credentials: true,
     },
   });
