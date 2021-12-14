@@ -34,7 +34,7 @@ export const editUser = async (
           Key: `${id}/profile.png`,
           Body: buffer,
           ContentEncoding: "base64",
-          ContentType: image.imageBase64.match(/image\/(\w+)(?=;)/)?.[1] ?? "",
+          ContentType: image.imageBase64.match(/image\/(\w+)(?=;)/)?.[0] ?? "",
         },
         (data: any, err: any) => {
           console.log(data, err);
@@ -82,6 +82,7 @@ export const editUser = async (
         process.env.AWS_REGION
       }.amazonaws.com/${id}/profile.png`,
       alt: image.alt,
+      ProfilePic: true,
       uploader: {
         connect: {
           id,

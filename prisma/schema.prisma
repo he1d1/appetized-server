@@ -109,6 +109,7 @@ model Image {
   Ingredient   Ingredient?   @relation(fields: [ingredientId], references: [id])
   ingredientId String?
   Instruction  Instruction[]
+  ProfilePic   Boolean       @default(false)
 }
 
 model Instruction {

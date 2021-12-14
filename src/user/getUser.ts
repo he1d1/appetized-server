@@ -2,7 +2,7 @@ import { prisma } from "../app";
 
 export const getUser = async (_: any, args: any, { id, logouts }: any) => {
   if (id) {
-    return await prisma.user
+    const user: any = await prisma.user
       .findUnique({
         where: {
           id,
@@ -24,5 +24,10 @@ export const getUser = async (_: any, args: any, { id, logouts }: any) => {
         console.log(err);
         return null;
       });
+    user.profilePicture = user.image.filter(
+      (image: any) => image.ProfilePic
+    )?.[0];
+
+    return user;
   }
 };
