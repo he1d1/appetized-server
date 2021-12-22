@@ -9,8 +9,8 @@ export default gql`
     rating: Rating
     prepTime: Int
     cookTime: Int
-    uploadDate: Date
-    editDate: Date
+    uploadDate: String
+    editDate: String
     description: String
     keywords: [String]
     calories: Int
@@ -37,13 +37,50 @@ export default gql`
     id: ID!
     name: String
     username: String!
-    joinDate: Date!
-    editDate: Date
+    joinDate: String!
+    editDate: String
     profilePicture: Image
-    uploadedRecipes: [Recipe]
+    uploadedRecipes(
+      take: Int!
+      cursor: ID
+      skip: Boolean
+      orderBy: RecipeSort
+    ): [Recipe]
     following: [User]
     followers: [User]
-    savedRecipes: [Recipe]
+    savedRecipes: [ID]
+  }
+
+  input RecipeSort {
+    name: Sort
+    author: UserSort
+    rating: Sort
+    prepTime: Sort
+    cookTime: Sort
+    uploadDate: Sort
+    editDate: Sort
+    description: Sort
+    calories: Sort
+    cuisine: Sort
+    yield: Sort
+    savedBy: Sort
+    ingredients: Sort
+  }
+
+  input UserSort {
+    name: Sort
+    username: Sort
+    joinDate: Sort
+    editDate: Sort
+    uploadedRecipes: Sort
+    following: Sort
+    followers: Sort
+    savedRecipes: Sort
+  }
+
+  enum Sort {
+    asc
+    desc
   }
 
   input UserInput {
@@ -56,7 +93,7 @@ export default gql`
     url: String!
     alt: String
     author: User!
-    uploadDate: Date!
+    uploadDate: String!
   }
 
   input ImageInput {
@@ -72,24 +109,6 @@ export default gql`
 
   input RatingInput {
     rating: Float!
-  }
-
-  type Date {
-    year: Int!
-    month: Int!
-    day: Int!
-    hour: Int
-    minute: Int
-    second: Float
-  }
-
-  input DateInput {
-    year: Int!
-    month: Int!
-    day: Int!
-    hour: Int
-    minute: Int
-    second: Float
   }
 
   type QuantitativeIngredient {
@@ -142,13 +161,13 @@ export default gql`
     | User
     | Image
     | Rating
-    | Date
     | QuantitativeIngredient
     | Ingredient
     | Instruction
     | Response
 
   type Query {
+    feed(take: Int!, cursor: ID, skip: Boolean): [Recipe!]!
     authed: Boolean!
     getUser(id: ID): User!
   }
@@ -180,5 +199,7 @@ export default gql`
       yield: QuantitativeIngredientInput
     ): Recipe!
     deleteRecipe(id: ID!): Boolean!
+    saveRecipe(id: ID!): Boolean!
+    unsaveRecipe(id: ID!): Boolean!
   }
 `;
