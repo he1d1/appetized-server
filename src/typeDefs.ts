@@ -170,27 +170,24 @@ export default gql`
     feed(take: Int!, cursor: ID, skip: Boolean): [Recipe!]!
     authed: Boolean!
     getUser(id: ID): User!
+    getRecipe(id: ID!): Recipe!
+    getRecipes(query: String!): [Recipe]!
+    search(query: String!): [User]!
   }
 
   type Mutation {
-    login(email: String!, password: String!): Response!
+    login(email: String!, password: String!, remember: Boolean): Response!
     logout: Response!
     forgotPassword(email: String!, password: String!): Boolean!
 
-    addUser(email: String!, user: UserInput!, image: ImageInput): Response!
+    addUser(email: String!, user: UserInput!): Response!
     editUser(name: String, username: String, image: ImageInput): Response!
     deleteUser: Response!
 
     makeImage(image: ImageInput): Image!
     deleteImage(url: String): Boolean!
 
-    addRecipe(
-      recipe: RecipeInput
-      image: ImageInput
-      ingredients: [QuantitativeIngredientInput!]
-      instructions: [InstructionInput!]
-      yield: QuantitativeIngredientInput
-    ): Recipe!
+    addRecipe(recipe: RecipeInput!, image: ImageInput!): Response!
     editRecipe(
       recipe: RecipeInput!
       image: ImageInput
@@ -199,6 +196,7 @@ export default gql`
       yield: QuantitativeIngredientInput
     ): Recipe!
     deleteRecipe(id: ID!): Boolean!
+
     saveRecipe(id: ID!): Boolean!
     unsaveRecipe(id: ID!): Boolean!
   }

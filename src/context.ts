@@ -1,5 +1,6 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { cookies } from "./cookies";
+import { prisma } from "./app";
 
 export function context({ req, res }: any): Object {
   try {
@@ -7,7 +8,18 @@ export function context({ req, res }: any): Object {
       req.cookies["accessToken"] ?? null,
       process.env.ACCESS_TOKEN as string
     ) as any;
-    return { req, res, id, logouts };
+    if (!id) throw Error;
+    const { logouts: logoutsFromDb }: any = prisma.user
+      .findUnique({
+        where: { id },
+        select: {
+          logouts: true,
+        },
+      })
+      .then(async (res) => await res);
+    console.log(logouts, logoutsFromDb);
+    if (logouts === logouts) return { req, res, id, logouts };
+    throw Error;
   } catch (e) {
     try {
       const { id, logouts } = jwt.verify(

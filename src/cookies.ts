@@ -1,12 +1,17 @@
 import { Secret, sign } from "jsonwebtoken";
 import { CookieOptions } from "express";
 
-export function cookies(res: any, id: string, logouts: number) {
+export function cookies(
+  res: any,
+  id: string,
+  logouts: number,
+  remember?: boolean
+) {
   res.cookie(
     "accessToken",
     sign({ id: id, logouts: logouts }, process.env.ACCESS_TOKEN as Secret),
     {
-      expiresIn: "1h",
+      expires: remember ? new Date(Date.now() + 60 * 60 * 1000) : undefined,
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "lax" : "none",
       secure: true,
@@ -16,10 +21,13 @@ export function cookies(res: any, id: string, logouts: number) {
     "refreshToken",
     sign({ userId: id, logouts: logouts }, process.env.REFRESH_TOKEN as Secret),
     {
-      expiresIn: "30d",
+      expires: remember
+        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        : undefined,
       httpOnly: true,
       sameSite: process.env.NODE_ENV === "production" ? "lax" : "none",
       secure: true,
     } as CookieOptions
   );
+  console.log(res.cookies);
 }

@@ -20,13 +20,22 @@ export const feed = async (
     orderBy: { uploadDate: "desc" },
     where: {
       author: {
-        followers: {
-          every: {
-            followed: {
-              id,
+        AND: [
+          {
+            followers: {
+              every: {
+                followed: {
+                  id,
+                },
+              },
             },
           },
-        },
+          {
+            NOT: {
+              id: id,
+            },
+          },
+        ],
       },
     },
     include: {

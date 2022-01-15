@@ -5,9 +5,10 @@ import { cookies } from "../cookies";
 
 export const login = async (
   _: any,
-  { email, password }: any,
+  { email, password, remember }: any,
   { res, id }: any
 ) => {
+  console.log(remember);
   // An object that stores any validation errors that occur during the login process.
   const validationErrors: any = {};
 
@@ -39,7 +40,7 @@ export const login = async (
       throw new AuthenticationError("Email not verified.");
     }
     // Creates new set of tokens.
-    cookies(res, user.id, user.logouts);
+    cookies(res, user.id, user.logouts, remember);
     return {
       success: true,
       message: "Login successful.",

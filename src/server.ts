@@ -41,8 +41,6 @@ export async function startApolloServer(
 
     await redis.del(token);
 
-    console.log(id);
-
     await prisma.user.update({
       where: { id },
       data: {
@@ -59,7 +57,7 @@ export async function startApolloServer(
     typeDefs: typeDefs,
     resolvers: resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    context,
+    context: await context,
   });
 
   // More required logic for integrating with Express

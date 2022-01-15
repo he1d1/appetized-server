@@ -6,7 +6,7 @@ import { v4 } from "uuid";
 
 export const addUser = async (
   _: any,
-  { email, user: { name, username, password }, image }: any,
+  { email, user: { name, username, password } }: any,
   { id }: any
 ) => {
   // An object that stores any validation errors that occur while creating a user.
@@ -28,16 +28,6 @@ export const addUser = async (
 
   // Checks if an email was entered.
   if (!email) validationErrors.email = "Email is required.";
-
-  // Checks if an image was entered.
-  if (image) {
-    // Checks if the image is too big.
-    if (image.imageBase64.length > 10 * 1000000) {
-      validationErrors.image = "Image must be less than 10MB.";
-    }
-    // TODO implement images.
-    validationErrors.image = "Images have not yet been implemented";
-  }
 
   // Checks if already logged in.
   if (id) throw new AuthenticationError("Already logged in.");

@@ -70,17 +70,21 @@ export const editUser = async (
 
   await prisma.image.upsert({
     where: {
-      url: `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
-        process.env.AWS_REGION
-      }.amazonaws.com/${id}/profile.png`,
+      url:
+        (process.env.CDN_URL ??
+          `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
+            process.env.AWS_REGION
+          }.amazonaws.com`) + `/${id}/profile.png`,
     },
     update: {
       alt: image.alt,
     },
     create: {
-      url: `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
-        process.env.AWS_REGION
-      }.amazonaws.com/${id}/profile.png`,
+      url:
+        (process.env.CDN_URL ??
+          `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
+            process.env.AWS_REGION
+          }.amazonaws.com`) + `/${id}/profile.png`,
       alt: image.alt,
       ProfilePic: true,
       uploader: {
@@ -118,6 +122,7 @@ export const editUser = async (
           } is already in use.`;
         });
     });
+
   // If there are any validation errors.
   if (Object.keys(validationErrors).length > 0) {
     throw new UserInputError("Failed to add account due to user input.", {

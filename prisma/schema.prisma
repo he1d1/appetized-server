@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -11,21 +12,21 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  username     String    @unique
-  email        String    @unique
-  emailVerified Boolean @default(false)
-  name         String?
-  joinDate     DateTime  @default(now())
-  editDate     DateTime?
-  passwordHash String
-  logouts      Int @default(0)
-  recipes      Recipe[]  @relation(name: "Recipes")
-  ratings      Rating[]
-  following    Follow[]  @relation(name: "Following")
-  followers    Follow[]  @relation(name: "Follower")
-  savedRecipes Save[]    @relation(name: "Saved")
-  image        Image[]   @relation("Uploader")
+  id            String    @id @default(uuid())
+  username      String    @unique
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String?
+  joinDate      DateTime  @default(now())
+  editDate      DateTime?
+  passwordHash  String
+  logouts       Int       @default(0)
+  recipes       Recipe[]  @relation(name: "Recipes")
+  ratings       Rating[]
+  following     Follow[]  @relation(name: "Following")
+  followers     Follow[]  @relation(name: "Follower")
+  savedRecipes  Save[]    @relation(name: "Saved")
+  image         Image[]   @relation("Uploader")
 }
 
 model Recipe {
@@ -34,8 +35,8 @@ model Recipe {
   authorId                           String
   ratings                            Rating[]
   saves                              Save[]
-  prepTime                           Int
-  cookTime                           Int
+  prepTime                           Int?
+  cookTime                           Int?
   uploadDate                         DateTime                 @default(now())
   editDate                           DateTime?
   name                               String
@@ -51,6 +52,8 @@ model Recipe {
   ingredientId                       String?
   quantitativeIngredientRecipeId     String?
   quantitativeIngredientIngredientId String?
+  image                              Image                    @relation(fields: [imageUrl], references: [url])
+  imageUrl                           String
 }
 
 model Rating {
@@ -89,8 +92,8 @@ model QuantitativeIngredient {
   amount       Float
   unit         String
 
-  @@unique([recipeId, ingredientId])
   Recipe Recipe[]
+  @@unique([recipeId, ingredientId])
 }
 
 model Ingredient {
@@ -110,6 +113,7 @@ model Image {
   ingredientId String?
   Instruction  Instruction[]
   ProfilePic   Boolean       @default(false)
+  Recipe       Recipe[]
 }
 
 model Instruction {

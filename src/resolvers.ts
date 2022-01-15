@@ -9,7 +9,15 @@ import {
   User,
 } from "./user";
 
-import { feed, saveRecipe, unsaveRecipe } from "./recipe";
+import {
+  feed,
+  saveRecipe,
+  unsaveRecipe,
+  getRecipe,
+  getRecipes,
+  addRecipe,
+} from "./recipe";
+import { search } from "./search";
 
 export default {
   User,
@@ -17,9 +25,13 @@ export default {
     feed,
     authed,
     getUser,
+    getRecipe,
+    getRecipes,
+    search,
   },
   Mutation: {
     addUser,
+    addRecipe,
     saveRecipe,
     unsaveRecipe,
     deleteUser,
