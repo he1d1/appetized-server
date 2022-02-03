@@ -34,7 +34,7 @@ export default gql`
     ingredients(take: Int, from: ID, sort: IngredientSort): [Ingredient]
     cookTime: Int
     prepTime: Int
-    savedBy: [User]
+    savedBy(take: Int, from: ID, sort: UserSort): [User]
   }
 
   type Step {

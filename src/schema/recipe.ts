@@ -31,4 +31,21 @@ export default {
       orderBy: sort,
     });
   },
+  savedBy: async (
+    parent: any,
+    { take, from, sort }: { take: number; from: string; sort: any }
+  ) => {
+    return await prisma.user.findMany({
+      where: {
+        saved: {
+          some: {
+            id: parent.id,
+          },
+        },
+      },
+      take,
+      cursor: from ? { id: from } : undefined,
+      orderBy: sort,
+    });
+  },
 };
