@@ -1,7 +1,7 @@
 process.stdout.write("0% ▒▒▒▒▒▒▒▒ - Loading schema & node_modules");
 
-import resolvers from "./resolvers";
-import typeDefs from "./typeDefs";
+import resolvers from "./schema/resolvers";
+import typeDefs from "./schema/typeDefs";
 import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
 import { startApolloServer } from "./server";

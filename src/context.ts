@@ -2,34 +2,58 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { cookies } from "./cookies";
 import { prisma } from "./app";
 
-export function context({ req, res }: any): Object {
+export async function context({ req, res }: any): Promise<Object> {
   try {
-    const { id, logouts } = jwt.verify(
+    // Access Token
+    const { id, iat } = jwt.verify(
       req.cookies["accessToken"] ?? null,
       process.env.ACCESS_TOKEN as string
-    ) as any;
-    if (!id) throw Error;
-    const { logouts: logoutsFromDb }: any = prisma.user
-      .findUnique({
-        where: { id },
-        select: {
-          logouts: true,
-        },
-      })
-      .then(async (res) => await res);
-    console.log(logouts, logoutsFromDb);
-    if (logouts === logouts) return { req, res, id, logouts };
-    throw Error;
+    ) as JwtPayload;
+
+    // If the amount of logins is valid.
+    const user = await prisma.user.findFirst({
+      where: { id, iat: { lt: iat } },
+    });
+
+    // If the user is logged in hydrate context.
+    if (user) return { req, res, id };
+    else {
+      // User has been logged out on different device.
+      // Clears the user's cookies.
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      return { req, res, id: null, logouts: null };
+    }
   } catch (e) {
+    // Refresh Token
+    // If the user's access token is expired.
     try {
-      const { id, logouts } = jwt.verify(
+      const { id, iat } = jwt.verify(
         req.cookies["refreshToken"] ?? null,
         process.env.REFRESH_TOKEN as string
-      ) as any;
-      cookies(res, id, logouts);
-      return { req, res, id, logouts };
+      ) as JwtPayload;
+
+      // If the amount of logins is valid.
+      const user = await prisma.user.findFirst({
+        where: { id, iat: { lt: iat } },
+      });
+
+      // If the user is logged in hydrate context.
+      if (user) {
+        // User's access token has expired, needs to be reissued.
+        cookies(res, id);
+        return { req, res, id };
+      } else {
+        // User has been logged out on different device.
+        // Clears the user's cookies.
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
+        return { req, res, id: null };
+      }
     } catch (e) {
-      return { req, res, id: null, logouts: null };
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      return { req, res, id: null };
     }
   }
 }

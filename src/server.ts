@@ -35,21 +35,20 @@ export async function startApolloServer(
 
     // If the id is not found, do nothing.
     if (!id) {
-      res.send(false);
-      return next();
+      res.send("Invalid token").end();
+      return;
+    } else {
+      await redis.del(token);
+
+      await prisma.user.update({
+        where: { id },
+        data: {
+          emailVerified: true,
+        },
+      });
+      res.send("Email verified").end();
+      return;
     }
-
-    await redis.del(token);
-
-    await prisma.user.update({
-      where: { id },
-      data: {
-        emailVerified: true,
-      },
-    });
-
-    res.send(true);
-    return next();
   });
 
   // Same ApolloServer initialization as before, plus the drain plugin.
@@ -57,7 +56,7 @@ export async function startApolloServer(
     typeDefs: typeDefs,
     resolvers: resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    context: await context,
+    context,
   });
 
   // More required logic for integrating with Express

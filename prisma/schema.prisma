@@ -1,128 +1,79 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  previewFeatures = ["fullTextSearch", "fullTextIndex", "interactiveTransactions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String    @id @default(uuid())
-  username      String    @unique
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  name          String?
-  joinDate      DateTime  @default(now())
-  editDate      DateTime?
-  passwordHash  String
-  logouts       Int       @default(0)
-  recipes       Recipe[]  @relation(name: "Recipes")
-  ratings       Rating[]
-  following     Follow[]  @relation(name: "Following")
-  followers     Follow[]  @relation(name: "Follower")
-  savedRecipes  Save[]    @relation(name: "Saved")
-  image         Image[]   @relation("Uploader")
-}
+  id             String   @id @default(uuid())
+  name           String?
+  username       String   @unique
+  email          String   @unique
+  password       String
+  profilePicture Image?
+  createdAt      DateTime @default(now())
+  emailVerified  Boolean
+  recipes        Recipe[] @relation("author")
+  saved          Recipe[] @relation("save")
+  following      User[]   @relation("follow")
+  followers      User[]   @relation("follow")
+  iat            Int?     @default(0)
 
-model Recipe {
-  id                                 String                   @id @default(uuid())
-  author                             User                     @relation(name: "Recipes", fields: [authorId], references: [id])
-  authorId                           String
-  ratings                            Rating[]
-  saves                              Save[]
-  prepTime                           Int?
-  cookTime                           Int?
-  uploadDate                         DateTime                 @default(now())
-  editDate                           DateTime?
-  name                               String
-  description                        String?
-  keywords                           String[]
-  calories                           Int?
-  category                           String?
-  cuisine                            String?
-  ingredients                        QuantitativeIngredient[] @relation(name: "Ingredients")
-  instructions                       Instruction[]
-  yield                              QuantitativeIngredient?  @relation(fields: [quantitativeIngredientRecipeId, quantitativeIngredientIngredientId], references: [recipeId, ingredientId])
-  Ingredient                         Ingredient?              @relation(fields: [ingredientId], references: [id])
-  ingredientId                       String?
-  quantitativeIngredientRecipeId     String?
-  quantitativeIngredientIngredientId String?
-  image                              Image                    @relation(fields: [imageUrl], references: [url])
-  imageUrl                           String
-}
-
-model Rating {
-  author   User   @relation(fields: [authorId], references: [id])
-  authorId String
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  recipeId String
-  rating   Int
-
-  @@unique([authorId, recipeId])
-}
-
-model Follow {
-  follower   User   @relation(name: "Follower", fields: [followerId], references: [id])
-  followerId String
-  followed   User   @relation(name: "Following", fields: [followedId], references: [id])
-  followedId String
-
-  @@unique([followerId, followedId])
-}
-
-model Save {
-  user     User   @relation(name: "Saved", fields: [userId], references: [id])
-  userId   String
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  recipeId String
-
-  @@unique([userId, recipeId])
-}
-
-model QuantitativeIngredient {
-  recipe       Recipe     @relation(name: "Ingredients", fields: [recipeId], references: [id])
-  recipeId     String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
-  ingredientId String
-  amount       Float
-  unit         String
-
-  Recipe Recipe[]
-  @@unique([recipeId, ingredientId])
-}
-
-model Ingredient {
-  id                     String                   @id @default(uuid())
-  name                   String                   @unique
-  images                 Image[]
-  recipes                Recipe[]
-  QuantitativeIngredient QuantitativeIngredient[]
+  @@fulltext([username, name])
 }
 
 model Image {
-  alt          String?
-  url          String        @unique
-  uploader     User          @relation(name: "Uploader", fields: [uploaderId], references: [id])
-  uploaderId   String
-  Ingredient   Ingredient?   @relation(fields: [ingredientId], references: [id])
-  ingredientId String?
-  Instruction  Instruction[]
-  ProfilePic   Boolean       @default(false)
-  Recipe       Recipe[]
+  id      String  @id @default(uuid())
+  url     String
+  recipe  Recipe?
+  step    Step?
+  profile User?   @relation(fields: [userId], references: [id])
+  userId  String?
 }
 
-model Instruction {
-  recipe   Recipe  @relation(fields: [recipeId], references: [id])
-  recipeId String
-  name     String?
-  text     String
-  url      String  @unique
-  image    Image?  @relation(fields: [imageUrl], references: [url])
-  tip      Boolean
-  imageUrl String?
+model Recipe {
+  id          String       @id @default(uuid())
+  name        String
+  author      User         @relation("author", fields: [authorId], references: [id])
+  authorId    String
+  description String?
+  image       Image?       @relation(fields: [imageId], references: [id])
+  imageId     String?      @unique
+  createdAt   DateTime     @default(now())
+  steps       Step[]
+  category    String?
+  cuisine     String?
+  ingredients Ingredient[]
+  cookTime    Int?
+  prepTime    Int?
+  savedBy     User[]       @relation("save")
+
+  @@fulltext([name, description, cuisine, category])
+}
+
+model Step {
+  id        String   @id @default(uuid())
+  name      String?
+  createdAt DateTime @default(now())
+  content   String
+  image     Image?   @relation(fields: [imageId], references: [id])
+  imageId   String?  @unique
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id])
+  recipeId  String?
+
+  @@fulltext([name, content])
+}
+
+model Ingredient {
+  id       String  @id @default(uuid())
+  name     String
+  quantity String
+  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipeId String  @unique
+
+  @@fulltext([name])
 }
