@@ -6,7 +6,8 @@ import cookieParser from "cookie-parser";
 import { ApolloServer } from "apollo-server-express";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { context } from "./context";
-import { prisma, redis } from "./app";
+import { redis } from "./app";
+import { prisma } from "./prisma";
 
 export async function startApolloServer(
   typeDefs: DocumentNode,

@@ -1,4 +1,4 @@
-import { prisma } from "../../app";
+import { prisma } from "../../prisma";
 
 export default {
   createIngredient: async (

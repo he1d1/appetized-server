@@ -1,5 +1,6 @@
-import { prisma, s3 } from "../../app";
+import { s3 } from "../../app";
 import argon2 from "argon2";
+import { prisma } from "../../prisma";
 
 export default {
   createUser: async (

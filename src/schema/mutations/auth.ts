@@ -1,6 +1,6 @@
-import { prisma } from "../../app";
 import argon2 from "argon2";
 import { cookies } from "../../cookies";
+import { prisma } from "../../prisma";
 
 export default {
   loginUser: async (

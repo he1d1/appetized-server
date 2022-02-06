@@ -2,7 +2,6 @@ process.stdout.write("0% ▒▒▒▒▒▒▒▒ - Loading schema & node_module
 
 import resolvers from "./schema/resolvers";
 import typeDefs from "./schema/typeDefs";
-import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
 import { startApolloServer } from "./server";
 import { Tedis } from "tedis";
@@ -16,9 +15,6 @@ process.stdout.write("13% █▒▒▒▒▒▒▒ - Configuring environmental v
 config();
 process.stdout.write("\r\x1b[K");
 process.stdout.write("25% ██▒▒▒▒▒▒ - Connecting to database");
-
-// Connects to database.
-export const prisma = new PrismaClient();
 
 process.stdout.write("\r\x1b[K");
 process.stdout.write("38% ███▒▒▒▒▒ - Configuring and connecting to AWS SES");

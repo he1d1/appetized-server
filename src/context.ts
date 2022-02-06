@@ -1,6 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { cookies } from "./cookies";
-import { prisma } from "./app";
+import { prisma } from "./prisma";
 
 export async function context({ req, res }: any): Promise<Object> {
   try {
