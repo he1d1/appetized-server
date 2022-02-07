@@ -31,17 +31,21 @@ export default {
       };
     }
 
-    if (user.username.match(/^[a-z-]+$/) === null) {
+    //check if username contains invalid characters
+    if (!user.username.match(/^[a-z0-9\-]+$/)) {
       return {
         code: 400,
-        message: "Username must only contain lowercase letters and dashes",
+        message:
+          "Username must only contain lowercase letters, numbers and dashes",
       };
     }
 
-    if (user.username.match(/^[a-z][a-z-]+[a-z]$/) === null) {
+    // check if username is surrounded by dashes
+    if (user.username.match(/^[a-z0-9][a-z0-9-]+[a-z0-9]$/) === null) {
       return {
         code: 400,
-        message: "Username must start and end with a lowercase letter",
+        message:
+          "Username must start and end with an lowercase letter or number",
       };
     }
 
@@ -181,17 +185,19 @@ export default {
         };
       }
 
-      if (username.match(/^[a-z-]+$/) === null) {
+      if (username.match(/[a-z0-9-]/)?.length !== username.length) {
         return {
           code: 400,
-          message: "Username must only contain lowercase letters and dashes",
+          message:
+            "Username must only contain lowercase letters, numbers and dashes",
         };
       }
 
-      if (username.match(/^[a-z][a-z-]+[a-z]$/) === null) {
+      if (username.match(/^[a-z0-9][a-z0-9-]+[a-z0-9]$/) === null) {
         return {
           code: 400,
-          message: "Username must start and end with a lowercase letter",
+          message:
+            "Username must start and end with an lowercase letter or number",
         };
       }
 
