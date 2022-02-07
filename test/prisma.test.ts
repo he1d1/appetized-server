@@ -147,7 +147,7 @@ describe("Resolvers", function () {
           await resolvers.Mutation.createUser(null, {
             user: {
               name: "John",
-              username: "xjohnx",
+              username: "x-john-x",
               email: "john@example.com",
               password: "password1",
             },
@@ -155,70 +155,99 @@ describe("Resolvers", function () {
 
           expect(await prisma.user.findMany({})).to.have.length(3);
         });
-        it("shouldn't create user with existing email", async function () {
-          await expect(
-            await resolvers.Mutation.createUser(null, {
-              user: {
-                name: "John",
-                username: "xjohnx",
-                email: "lu@developer.lu",
-                password: "password1",
-              },
-            })
-          ).to.have.property("message", "Email already exists");
-        });
-        it("shouldn't create user with existing username", async function () {
-          await expect(
-            await resolvers.Mutation.createUser(null, {
-              user: {
-                name: "John",
-                username: "hiluw",
-                email: "john@example.com",
-                password: "password1",
-              },
-            })
-          ).to.have.property("message", "Username already exists");
-        });
-        it("shouldn't create a user with a username containing invalid characters", async function () {
-          await expect(
-            await resolvers.Mutation.createUser(null, {
-              user: {
-                name: "John",
-                email: "john@example.com",
-                password: "password1",
-                username: "hiluw$",
-              },
-            })
-          ).to.have.property(
-            "message",
-            "Username must only contain lowercase letters and dashes"
-          );
-        });
-        it("should allow the user to create a username with dashes", async function () {
-          await resolvers.Mutation.createUser(null, {
-            user: {
-              name: "John",
-              email: "john@example.com",
-              password: "password1",
-              username: "hil-uw",
-            },
+        describe("username", function () {
+          // unique
+          it("should fail if username is not unique", async function () {
+            await expect(
+              await resolvers.Mutation.createUser(null, {
+                user: {
+                  name: "John",
+                  username: "hiluw",
+                  email: "john@example.com",
+                  password: "password1",
+                },
+              })
+            ).to.have.property("message", "Username already exists");
           });
-          expect(await prisma.user.findMany({})).to.have.length(3);
-        });
-        it("shouldn't allow the user to create a username starting or ending with dashes", async function () {
-          await expect(
-            await resolvers.Mutation.createUser(null, {
-              user: {
-                name: "John",
-                email: "john@example.com",
-                password: "password1",
-                username: "hiluw-",
-              },
-            })
-          ).to.have.property(
-            "message",
-            "Username must start and end with a lowercase letter"
-          );
+
+          // length
+          it("should fail if the username is less than 3 characters long", async function () {
+            await expect(
+              await resolvers.Mutation.createUser(null, {
+                user: {
+                  name: "John",
+                  username: "ab",
+                  email: "john@example.com",
+                  password: "password1",
+                },
+              })
+            ).to.have.property(
+              "message",
+              "Username must be at least 3 characters long"
+            );
+          });
+
+          it("should fail if the username is greater than 20 characters long", async function () {
+            await expect(
+              await resolvers.Mutation.createUser(null, {
+                user: {
+                  name: "John",
+                  username: "abcdefghijklmnopqrstuvwxyz",
+                  email: "john@example.com",
+                  password: "password1",
+                },
+              })
+            ).to.have.property(
+              "message",
+              "Username must be less than 20 characters long"
+            );
+          });
+
+          it("should fail if the username contains a capital letter", async function () {
+            await expect(
+              await resolvers.Mutation.createUser(null, {
+                user: {
+                  name: "John",
+                  username: "John",
+                  email: "john@example.com",
+                  password: "password1",
+                },
+              })
+            ).to.have.property(
+              "message",
+              "Username must only contain lowercase letters, numbers and dashes"
+            );
+          });
+          it("should fail if the username contains something other than a lowercase letter, number or dash", async function () {
+            await expect(
+              await resolvers.Mutation.createUser(null, {
+                user: {
+                  name: "John",
+                  username: "$$richJohn$$",
+                  email: "john@example.com",
+                  password: "password1",
+                },
+              })
+            ).to.have.property(
+              "message",
+              "Username must only contain lowercase letters, numbers and dashes"
+            );
+          });
+          it("should fail if the username starts or ends with a dash", async function () {
+            await expect(
+              await resolvers.Mutation.createUser(null, {
+                user: {
+                  name: "John",
+                  username: "-john-",
+                  email: "john@example.com",
+                  password: "password1",
+                },
+              })
+            ).to.have.property(
+              "message",
+              "Username must start and end with an lowercase letter or number"
+            );
+          });
         });
       });
     });

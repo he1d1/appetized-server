@@ -4,7 +4,7 @@
     "start": "cross-env NODE_ENV=production ts-node src/app.ts",
     "dev": "cross-env NODE_ENV=development nodemon --exec ts-node src/app.ts",
     "build": "tsc --build",
-    "test": "docker-compose up -d && dotenv -e .env.test nyc --include=['src/schema/*.ts'] ts-mocha ./test/**.test.ts  && docker-compose down",
+    "test": "docker-compose up -d && pnpm migrate:test && dotenv -e .env.test nyc --include=['src/schema/*.ts'] ts-mocha ./test/**.test.ts  && docker-compose down",
     "migrate:test": "dotenv -e .env.test -- npx prisma migrate dev --name postgres-init"
   },
   "dependencies": {
