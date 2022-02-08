@@ -1,255 +1,483 @@
 import prisma from "../src/prisma";
 import { expect } from "chai";
-import resolvers from "../src/schema/resolvers";
 
-describe("user", function () {
-  beforeEach(async () => {
-    // Clear the database
-    await prisma.image.deleteMany({});
-    await prisma.ingredient.deleteMany({});
-    await prisma.step.deleteMany({});
-    await prisma.recipe.deleteMany({});
-    await prisma.user.deleteMany({});
+describe("Prisma", function () {
+  describe("user", function () {
+    beforeEach(async () => {
+      // Clear the database
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
 
-    // Create a test suite
-    await prisma.user.createMany({
-      data: [
-        {
-          email: "lu@developer.lu",
-          password: "password",
-          name: "Lu",
-          username: "hiluw",
-          emailVerified: false,
-        },
-        {
-          email: "heidi@developer.lu",
-          password: "password",
-          name: "Heidi",
-          username: "dee",
-          emailVerified: true,
-        },
-      ],
-    });
-
-    await prisma.recipe.create({
-      data: {
-        name: "Bacon and Eggs",
-        description: "A classic",
-        author: {
-          connect: {
+      // Create a test suite
+      await prisma.user.createMany({
+        data: [
+          {
+            email: "lu@developer.lu",
+            password: "password",
+            name: "Lu",
             username: "hiluw",
+            emailVerified: false,
           },
-        },
-      },
-    });
-    await prisma.recipe.create({
-      data: {
-        name: "Sausage and Beans",
-        description: "Another classic",
-        author: {
-          connect: {
+          {
+            email: "heidi@developer.lu",
+            password: "password",
+            name: "Heidi",
             username: "dee",
+            emailVerified: true,
           },
-        },
-      },
-    });
-  });
-
-  afterEach(async () => {
-    await prisma.image.deleteMany({});
-    await prisma.ingredient.deleteMany({});
-    await prisma.step.deleteMany({});
-    await prisma.recipe.deleteMany({});
-    await prisma.user.deleteMany({});
-  });
-
-  it("should create a new user", async function () {
-    await prisma.user.create({
-      data: {
-        name: "John",
-        username: "xXJohnXx",
-        email: "john@example.com",
-        password: "password",
-        emailVerified: true,
-      },
-    });
-
-    const users = await prisma.user.findMany({});
-
-    expect(users).to.have.length(3);
-  });
-});
-
-describe("Resolvers", function () {
-  beforeEach(async () => {
-    // Clear the database
-    await prisma.image.deleteMany({});
-    await prisma.ingredient.deleteMany({});
-    await prisma.step.deleteMany({});
-    await prisma.recipe.deleteMany({});
-    await prisma.user.deleteMany({});
-
-    // Create a test suite
-    await prisma.user.createMany({
-      data: [
-        {
-          email: "lu@developer.lu",
-          password: "password",
-          name: "Lu",
-          username: "hiluw",
-          emailVerified: false,
-        },
-        {
-          email: "heidi@developer.lu",
-          password: "password",
-          name: "Heidi",
-          username: "dee",
-          emailVerified: true,
-        },
-      ],
-    });
-
-    await prisma.recipe.create({
-      data: {
-        name: "Bacon and Eggs",
-        description: "A classic",
-        author: {
-          connect: {
-            username: "hiluw",
-          },
-        },
-      },
-    });
-    await prisma.recipe.create({
-      data: {
-        name: "Sausage and Beans",
-        description: "Another classic",
-        author: {
-          connect: {
-            username: "dee",
-          },
-        },
-      },
-    });
-  });
-
-  afterEach(async () => {
-    await prisma.image.deleteMany({});
-    await prisma.ingredient.deleteMany({});
-    await prisma.step.deleteMany({});
-    await prisma.recipe.deleteMany({});
-    await prisma.user.deleteMany({});
-  });
-  describe("Mutation", function () {
-    describe("user", function () {
-      describe("createUser", function () {
-        it("should create user", async function () {
-          await resolvers.Mutation.createUser(null, {
-            user: {
-              name: "John",
-              username: "x-john-x",
-              email: "john@example.com",
-              password: "password1",
-            },
-          });
-
-          expect(await prisma.user.findMany({})).to.have.length(3);
-        });
-        describe("username", function () {
-          // unique
-          it("should fail if username is not unique", async function () {
-            await expect(
-              await resolvers.Mutation.createUser(null, {
-                user: {
-                  name: "John",
-                  username: "hiluw",
-                  email: "john@example.com",
-                  password: "password1",
-                },
-              })
-            ).to.have.property("message", "Username already exists");
-          });
-
-          // length
-          it("should fail if the username is less than 3 characters long", async function () {
-            await expect(
-              await resolvers.Mutation.createUser(null, {
-                user: {
-                  name: "John",
-                  username: "ab",
-                  email: "john@example.com",
-                  password: "password1",
-                },
-              })
-            ).to.have.property(
-              "message",
-              "Username must be at least 3 characters long"
-            );
-          });
-
-          it("should fail if the username is greater than 20 characters long", async function () {
-            await expect(
-              await resolvers.Mutation.createUser(null, {
-                user: {
-                  name: "John",
-                  username: "abcdefghijklmnopqrstuvwxyz",
-                  email: "john@example.com",
-                  password: "password1",
-                },
-              })
-            ).to.have.property(
-              "message",
-              "Username must be less than 20 characters long"
-            );
-          });
-
-          it("should fail if the username contains a capital letter", async function () {
-            await expect(
-              await resolvers.Mutation.createUser(null, {
-                user: {
-                  name: "John",
-                  username: "John",
-                  email: "john@example.com",
-                  password: "password1",
-                },
-              })
-            ).to.have.property(
-              "message",
-              "Username must only contain lowercase letters, numbers and dashes"
-            );
-          });
-          it("should fail if the username contains something other than a lowercase letter, number or dash", async function () {
-            await expect(
-              await resolvers.Mutation.createUser(null, {
-                user: {
-                  name: "John",
-                  username: "$$richJohn$$",
-                  email: "john@example.com",
-                  password: "password1",
-                },
-              })
-            ).to.have.property(
-              "message",
-              "Username must only contain lowercase letters, numbers and dashes"
-            );
-          });
-          it("should fail if the username starts or ends with a dash", async function () {
-            await expect(
-              await resolvers.Mutation.createUser(null, {
-                user: {
-                  name: "John",
-                  username: "-john-",
-                  email: "john@example.com",
-                  password: "password1",
-                },
-              })
-            ).to.have.property(
-              "message",
-              "Username must start and end with an lowercase letter or number"
-            );
-          });
-        });
+        ],
       });
+    });
+
+    afterEach(async () => {
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+    });
+
+    it("should create a new user", async function () {
+      await prisma.user.create({
+        data: {
+          name: "John",
+          username: "xXJohnXx",
+          email: "john@example.com",
+          password: "password",
+          emailVerified: true,
+        },
+      });
+
+      const users = await prisma.user.findMany({});
+
+      expect(users).to.have.length(3);
+    });
+
+    it("should edit a user", async function () {
+      const user = await prisma.user.findUnique({
+        where: {
+          username: "hiluw",
+        },
+      });
+
+      const { id } = await prisma.user.update({
+        where: {
+          id: user?.id,
+        },
+        data: {
+          username: "aoeu",
+        },
+      });
+
+      const updatedUser = await prisma.user.findUnique({
+        where: {
+          id,
+        },
+      });
+
+      expect(updatedUser?.username).to.equal("aoeu");
+    });
+    it("should delete a user", async function () {
+      const user = await prisma.user.findUnique({
+        where: {
+          username: "hiluw",
+        },
+      });
+
+      await prisma.user.delete({
+        where: {
+          id: user?.id,
+        },
+      });
+
+      const users = await prisma.user.findMany({});
+
+      expect(users).to.have.length(1);
+    });
+  });
+  describe("recipe", function () {
+    beforeEach(async () => {
+      // Clear the database
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+
+      // Create a test suite
+      await prisma.user.createMany({
+        data: [
+          {
+            email: "lu@developer.lu",
+            password: "password",
+            name: "Lu",
+            username: "hiluw",
+            emailVerified: false,
+          },
+          {
+            email: "heidi@developer.lu",
+            password: "password",
+            name: "Heidi",
+            username: "dee",
+            emailVerified: true,
+          },
+        ],
+      });
+
+      await prisma.recipe.create({
+        data: {
+          name: "Bacon and Eggs",
+          description: "A classic",
+          author: {
+            connect: {
+              username: "hiluw",
+            },
+          },
+        },
+      });
+      await prisma.recipe.create({
+        data: {
+          name: "Sausage and Beans",
+          description: "Another classic",
+          author: {
+            connect: {
+              username: "dee",
+            },
+          },
+        },
+      });
+    });
+
+    afterEach(async () => {
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+    });
+
+    it("should create a new recipe", async function () {
+      await prisma.recipe.create({
+        data: {
+          name: "Bacon and Eggs",
+          description: "A classic",
+          author: {
+            connect: {
+              username: "hiluw",
+            },
+          },
+        },
+      });
+
+      const recipes = await prisma.recipe.findMany({});
+      expect(recipes).to.have.length(3);
+    });
+    it("should edit a recipe", async function () {
+      const recipe = await prisma.recipe.findFirst({});
+
+      const { id } = await prisma.recipe.update({
+        where: {
+          id: recipe?.id,
+        },
+        data: {
+          name: "Bacon and Beans",
+        },
+      });
+
+      const updatedRecipe = await prisma.recipe.findUnique({
+        where: {
+          id,
+        },
+      });
+
+      expect(updatedRecipe?.name).to.equal("Bacon and Beans");
+    });
+    it("should delete a recipe", async function () {
+      const recipe = await prisma.recipe.findFirst({});
+
+      await prisma.recipe.delete({
+        where: {
+          id: recipe?.id,
+        },
+      });
+
+      const recipes = await prisma.recipe.findMany({});
+
+      expect(recipes).to.have.length(1);
+    });
+  });
+  describe("step", function () {
+    beforeEach(async () => {
+      // Clear the database
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+
+      // Create a test suite
+      await prisma.user.createMany({
+        data: [
+          {
+            email: "lu@developer.lu",
+            password: "password",
+            name: "Lu",
+            username: "hiluw",
+            emailVerified: false,
+          },
+          {
+            email: "heidi@developer.lu",
+            password: "password",
+            name: "Heidi",
+            username: "dee",
+            emailVerified: true,
+          },
+        ],
+      });
+
+      await prisma.recipe.create({
+        data: {
+          name: "Bacon and Eggs",
+          description: "A classic",
+          author: {
+            connect: {
+              username: "hiluw",
+            },
+          },
+        },
+      });
+      await prisma.recipe.create({
+        data: {
+          name: "Sausage and Beans",
+          description: "Another classic",
+          author: {
+            connect: {
+              username: "dee",
+            },
+          },
+        },
+      });
+    });
+
+    afterEach(async () => {
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+    });
+
+    it("should create a new step", async function () {
+      const [{ id }] = await prisma.recipe.findMany({});
+
+      await prisma.step.create({
+        data: {
+          content: "Step 1",
+          recipe: {
+            connect: { id },
+          },
+        },
+      });
+
+      const steps = await prisma.step.findMany({});
+      expect(steps).to.have.length(1);
+    });
+
+    it("should edit a step", async function () {
+      const [{ id: recipeId }] = await prisma.recipe.findMany({});
+
+      // create the step
+      const step = await prisma.step.create({
+        data: {
+          content: "Step 1",
+          recipe: {
+            connect: {
+              id: recipeId,
+            },
+          },
+        },
+      });
+
+      const { id: stepId } = await prisma.step.update({
+        where: {
+          id: step?.id,
+        },
+        data: {
+          content: "Step 2",
+        },
+      });
+
+      const updatedStep = await prisma.step.findUnique({
+        where: {
+          id: stepId,
+        },
+      });
+
+      expect(updatedStep?.content).to.equal("Step 2");
+    });
+    it("should delete a step", async function () {
+      const [{ id: recipeId }] = await prisma.recipe.findMany({});
+
+      // create the step
+      const step = await prisma.step.create({
+        data: {
+          content: "Step 1",
+          recipe: {
+            connect: {
+              id: recipeId,
+            },
+          },
+        },
+      });
+
+      await prisma.step.delete({
+        where: {
+          id: step?.id,
+        },
+      });
+
+      const steps = await prisma.step.findMany({});
+      expect(steps).to.have.length(0);
+    });
+  });
+  describe("ingredient", function () {
+    beforeEach(async () => {
+      // Clear the database
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+
+      // Create a test suite
+      await prisma.user.createMany({
+        data: [
+          {
+            email: "lu@developer.lu",
+            password: "password",
+            name: "Lu",
+            username: "hiluw",
+            emailVerified: false,
+          },
+          {
+            email: "heidi@developer.lu",
+            password: "password",
+            name: "Heidi",
+            username: "dee",
+            emailVerified: true,
+          },
+        ],
+      });
+
+      await prisma.recipe.create({
+        data: {
+          name: "Bacon and Eggs",
+          description: "A classic",
+          author: {
+            connect: {
+              username: "hiluw",
+            },
+          },
+        },
+      });
+      await prisma.recipe.create({
+        data: {
+          name: "Sausage and Beans",
+          description: "Another classic",
+          author: {
+            connect: {
+              username: "dee",
+            },
+          },
+        },
+      });
+    });
+
+    afterEach(async () => {
+      await prisma.image.deleteMany({});
+      await prisma.ingredient.deleteMany({});
+      await prisma.step.deleteMany({});
+      await prisma.recipe.deleteMany({});
+      await prisma.user.deleteMany({});
+    });
+
+    it("should create a new ingredient", async function () {
+      const [{ id }] = await prisma.recipe.findMany({});
+
+      await prisma.ingredient.create({
+        data: {
+          name: "Bacon",
+          quantity: "1",
+          recipe: {
+            connect: { id },
+          },
+        },
+      });
+
+      const ingredient = await prisma.ingredient.findMany({});
+      expect(ingredient).to.have.length(1);
+    });
+
+    it("should edit an ingredient", async function () {
+      const [{ id: recipeId }] = await prisma.recipe.findMany({});
+
+      // create the step
+      const ingredient = await prisma.ingredient.create({
+        data: {
+          name: "Bacon",
+          quantity: "1",
+          recipe: {
+            connect: {
+              id: recipeId,
+            },
+          },
+        },
+      });
+
+      const { id: ingredientId } = await prisma.ingredient.update({
+        where: {
+          id: ingredient?.id,
+        },
+        data: {
+          name: "Crispy Bacon",
+        },
+      });
+
+      const updatedIngredient = await prisma.ingredient.findUnique({
+        where: {
+          id: ingredientId,
+        },
+      });
+
+      expect(updatedIngredient?.name).to.equal("Crispy Bacon");
+    });
+    it("should delete an ingredient", async function () {
+      const [{ id: recipeId }] = await prisma.recipe.findMany({});
+
+      // create the step
+      const ingredient = await prisma.ingredient.create({
+        data: {
+          name: "Bacon",
+          quantity: "1",
+          recipe: {
+            connect: {
+              id: recipeId,
+            },
+          },
+        },
+      });
+
+      await prisma.ingredient.delete({
+        where: {
+          id: ingredient?.id,
+        },
+      });
+
+      const ingredients = await prisma.ingredient.findMany({});
+      expect(ingredients).to.have.length(0);
     });
   });
 });

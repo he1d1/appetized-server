@@ -16,6 +16,28 @@ export default {
       };
     }
   ) => {
+    // Check all required fields are present
+    if (!user.username) {
+      return {
+        code: 400,
+        message: "Username is required",
+      };
+    }
+
+    if (!user.email) {
+      return {
+        code: 400,
+        message: "Email is required",
+      };
+    }
+
+    if (!user.password) {
+      return {
+        code: 400,
+        message: "Password is required",
+      };
+    }
+
     //Check username is valid
     if (user.username.length < 3) {
       return {
@@ -49,14 +71,6 @@ export default {
       };
     }
 
-    //Check email is valid
-    if (user.email.indexOf("@") === -1) {
-      return {
-        code: 400,
-        message: "Email is invalid",
-      };
-    }
-
     if (user.email.length > 100) {
       return {
         code: 400,
@@ -76,28 +90,6 @@ export default {
       return {
         code: 400,
         message: "Password must be less than 100 characters long",
-      };
-    }
-
-    // Check all required fields are present
-    if (!user.username) {
-      return {
-        code: 400,
-        message: "Username is required",
-      };
-    }
-
-    if (!user.email) {
-      return {
-        code: 400,
-        message: "Email is required",
-      };
-    }
-
-    if (!user.password) {
-      return {
-        code: 400,
-        message: "Password is required",
       };
     }
 
@@ -137,6 +129,14 @@ export default {
           message: "Username already exists",
         };
       }
+    }
+
+    //Check email is valid
+    if (user.email.indexOf("@") === -1) {
+      return {
+        code: 400,
+        message: "Email is invalid",
+      };
     }
 
     user.password = await argon2.hash(user.password);
@@ -185,7 +185,8 @@ export default {
         };
       }
 
-      if (username.match(/[a-z0-9-]/)?.length !== username.length) {
+      //check if username contains invalid characters
+      if (!username.match(/^[a-z0-9\-]+$/)) {
         return {
           code: 400,
           message:
