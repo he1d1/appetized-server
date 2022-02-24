@@ -12,6 +12,18 @@ export default {
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        image: true,
+        author: true,
+      },
+    });
+  },
+
+  recipesCount: async (parent: any) => {
+    return await prisma.recipe.count({
+      where: {
+        authorId: parent.id,
+      },
     });
   },
 
@@ -30,6 +42,10 @@ export default {
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        image: true,
+        author: true,
+      },
     });
   },
 
@@ -51,6 +67,18 @@ export default {
     });
   },
 
+  followerCount: async (parent: any) => {
+    return await prisma.user.count({
+      where: {
+        following: {
+          some: {
+            id: parent.id,
+          },
+        },
+      },
+    });
+  },
+
   following: async (
     parent: any,
     { take, from, sort }: { take: number; from: string; sort: any }
@@ -66,6 +94,18 @@ export default {
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+    });
+  },
+
+  followingCount: async (parent: any) => {
+    return await prisma.user.count({
+      where: {
+        followers: {
+          some: {
+            id: parent.id,
+          },
+        },
+      },
     });
   },
 };

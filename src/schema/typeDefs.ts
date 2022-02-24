@@ -8,9 +8,12 @@ export default gql`
     profilePicture: Image
     createdAt: String!
     recipes(take: Int, from: ID, sort: RecipeSort): [Recipe]
+    recipesCount: Int
     savedRecipes(take: Int, from: ID, sort: RecipeSort): [Recipe]
     following(take: Int, from: ID, sort: UserSort): [User]
+    followingCount: Int
     followers(take: Int, from: ID, sort: UserSort): [User]
+    followerCount: Int
   }
 
   type Image {
@@ -65,11 +68,16 @@ export default gql`
     step(id: ID!): StepResponse!
     ingredient(id: ID!): IngredientResponse!
 
-    users(query: String, take: Int, from: ID, sort: UserSort): [User]
-    recipes(query: String, take: Int, from: ID, sort: RecipeSort): [Recipe]
-    steps(query: String, take: Int, from: ID, sort: StepSort): [Step]
+    users(where: UserFilter, take: Int, from: ID, sort: UserSort): [User]
+    recipes(
+      where: RecipeFilter
+      take: Int
+      from: ID
+      sort: RecipeSort
+    ): [Recipe]
+    steps(where: StepFilter, take: Int, from: ID, sort: StepSort): [Step]
     ingredients(
-      query: String
+      where: IngredientFilter
       take: Int
       from: ID
       sort: IngredientSort
@@ -194,6 +202,107 @@ export default gql`
     name: Direction
     quantity: Direction
     recipe: Direction
+  }
+
+  # Prisma where filter
+  input StringFilter {
+    equals: String
+    not: StringFilter
+    in: [String]
+    notIn: [String]
+    lt: String
+    lte: String
+    gt: String
+    gte: String
+    contains: String
+    startsWith: String
+    endsWith: String
+    search: String
+  }
+
+  input IntFilter {
+    equals: Int
+    not: IntFilter
+    in: [Int]
+    notIn: [Int]
+    lt: Int
+    lte: Int
+    gt: Int
+    gte: Int
+  }
+
+  input BooleanFilter {
+    equals: Boolean
+    not: BooleanFilter
+  }
+
+  input UserFilter {
+    AND: [UserFilter]
+    OR: [UserFilter]
+    NOT: UserFilter
+    some: UserFilter
+    none: UserFilter
+    every: UserFilter
+    id: StringFilter
+    name: StringFilter
+    username: StringFilter
+    createdAt: StringFilter
+    recipes: RecipeFilter
+    savedRecipes: RecipeFilter
+    following: UserFilter
+    followers: UserFilter
+    _count: IntFilter
+  }
+
+  input RecipeFilter {
+    AND: [RecipeFilter]
+    OR: [RecipeFilter]
+    NOT: RecipeFilter
+    some: RecipeFilter
+    none: RecipeFilter
+    every: RecipeFilter
+    id: StringFilter
+    name: StringFilter
+    author: UserFilter
+    description: StringFilter
+    createdAt: StringFilter
+    steps: StepFilter
+    category: StringFilter
+    cuisine: StringFilter
+    ingredients: IngredientFilter
+    cookTime: IntFilter
+    prepTime: IntFilter
+    savedBy: UserFilter
+    _count: IntFilter
+  }
+
+  input StepFilter {
+    AND: [StepFilter]
+    OR: [StepFilter]
+    NOT: StepFilter
+    some: StepFilter
+    none: StepFilter
+    every: StepFilter
+    id: StringFilter
+    name: StringFilter
+    createdAt: StringFilter
+    content: StringFilter
+    recipe: RecipeFilter
+    _count: IntFilter
+  }
+
+  input IngredientFilter {
+    AND: [IngredientFilter]
+    OR: [IngredientFilter]
+    NOT: IngredientFilter
+    some: IngredientFilter
+    none: IngredientFilter
+    every: IngredientFilter
+    id: StringFilter
+    name: StringFilter
+    quantity: StringFilter
+    recipe: RecipeFilter
+    _count: IntFilter
   }
 
   union UserResponse = User | Error

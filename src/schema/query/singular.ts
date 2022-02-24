@@ -10,6 +10,9 @@ export default {
       return (
         (await prisma.user.findUnique({
           where: { id: id },
+          include: {
+            profilePicture: true,
+          },
         })) ?? {
           // Id is not found
           code: 404,
@@ -20,6 +23,9 @@ export default {
       return (
         (await prisma.user.findUnique({
           where: { username: username },
+          include: {
+            profilePicture: true,
+          },
         })) ?? {
           // Username is not found
           code: 404,
@@ -30,6 +36,9 @@ export default {
       return (
         (await prisma.user.findUnique({
           where: { id: uuid },
+          include: {
+            profilePicture: true,
+          },
         })) ?? {
           // Something is very broken
           code: 500,
@@ -48,6 +57,10 @@ export default {
     return (
       (await prisma.recipe.findUnique({
         where: { id: id },
+        include: {
+          author: true,
+          image: true,
+        },
       })) ?? {
         // Id is not found
         code: 404,
@@ -61,12 +74,22 @@ export default {
         // Id is not found
         code: 404,
         message: "Image not found",
+        include: {
+          recipe: true,
+          user: true,
+          step: true,
+        },
       }
     );
   },
   step: async (_ = null, { id }: { id: string }) => {
     return (
-      (await prisma.step.findUnique({ where: { id: id } })) ?? {
+      (await prisma.step.findUnique({
+        where: { id: id },
+        include: {
+          recipe: true,
+        },
+      })) ?? {
         // Id is not found
         code: 404,
         message: "Step not found",
@@ -75,7 +98,12 @@ export default {
   },
   ingredient: async (_ = null, { id }: { id: string }) => {
     return (
-      (await prisma.ingredient.findUnique({ where: { id: id } })) ?? {
+      (await prisma.ingredient.findUnique({
+        where: { id: id },
+        include: {
+          recipe: true,
+        },
+      })) ?? {
         // Id is not found
         code: 404,
         message: "Ingredient not found",

@@ -84,10 +84,6 @@ export default {
       };
     }
 
-    if (recipeExists?.authorId !== args?.id) {
-      return {};
-    }
-
     // Update recipe
     return await prisma.recipe.update({
       where: {

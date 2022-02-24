@@ -544,5 +544,516 @@ describe("Resolvers", function () {
         });
       });
     });
+    describe("recipe", function () {
+      describe("createRecipe", function () {
+        it("should create a recipe", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          await resolvers.Mutation.createRecipe(
+            null,
+            {
+              recipe: {
+                name: "test",
+                description: "test",
+              },
+            },
+            { id: userId }
+          );
+          expect(await prisma.recipe.findMany({})).to.have.length(3);
+        });
+        it("should fail if the user is not logged in", async function () {
+          await expect(
+            await resolvers.Mutation.createRecipe(
+              null,
+              { recipe: { name: "test", description: "test" } },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+      });
+      describe("editRecipe", function () {
+        it("should edit a recipe", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          await resolvers.Mutation.editRecipe(
+            null,
+            {
+              id: recipeId,
+              recipe: {
+                name: "Bacon and Beans",
+              },
+            },
+            { id: userId }
+          );
+          const recipe = await prisma.recipe.findUnique({
+            where: { id: recipeId },
+          });
+          expect(recipe).to.have.property("name", "Bacon and Beans");
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          await expect(
+            await resolvers.Mutation.editRecipe(
+              null,
+              {
+                id: "",
+                recipe: {
+                  name: "Bacon and Beans",
+                },
+              },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+        it("should fail if the user is not logged in", async function () {
+          return expect(
+            await resolvers.Mutation.editRecipe(
+              null,
+              { id: "", recipe: { name: "test" } },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the user does not own the recipe", async function () {
+          const [{ id: authorId }, { id: editorId }] =
+            await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({
+            where: { author: { id: authorId } },
+          });
+          return expect(
+            await resolvers.Mutation.editRecipe(
+              null,
+              { id: recipeId, recipe: { name: "test" } },
+              { id: editorId }
+            )
+          ).to.have.property(
+            "message",
+            "You are not authorized to edit this recipe"
+          );
+        });
+      });
+      describe("deleteRecipe", function () {
+        it("should delete a recipe", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          await resolvers.Mutation.deleteRecipe(
+            null,
+            { id: recipeId },
+            { id: userId }
+          );
+          expect(await prisma.recipe.findMany({})).to.have.length(1);
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          await expect(
+            await resolvers.Mutation.deleteRecipe(
+              null,
+              { id: "" },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          return expect(
+            await resolvers.Mutation.deleteRecipe(
+              null,
+              { id: recipeId },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the user does not own the recipe", async function () {
+          const [{ id: authorId }, { id: deleterId }] =
+            await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({
+            where: { author: { id: authorId } },
+          });
+          return expect(
+            await resolvers.Mutation.deleteRecipe(
+              null,
+              { id: recipeId },
+              { id: deleterId }
+            )
+          ).to.have.property(
+            "message",
+            "You are not authorized to edit this recipe"
+          );
+        });
+      });
+      describe("saveRecipe", function () {
+        it("should save a recipe", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          await resolvers.Mutation.saveRecipe(
+            null,
+            { id: recipeId },
+            { id: userId }
+          );
+          const user = (await prisma.user.findUnique({
+            where: { id: userId },
+            include: { saved: true },
+          })) as any;
+          expect(user.saved.map((r: { id: any }) => r.id).includes(recipeId)).to
+            .be.true;
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          await expect(
+            await resolvers.Mutation.saveRecipe(
+              null,
+              { id: "" },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          return expect(
+            await resolvers.Mutation.saveRecipe(
+              null,
+              { id: recipeId },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+      });
+      describe("unsaveRecipe", async function () {
+        it("should unsave a recipe", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          await resolvers.Mutation.unsaveRecipe(
+            null,
+            { id: recipeId },
+            { id: userId }
+          );
+          const user = (await prisma.user.findUnique({
+            where: { id: userId },
+            include: { saved: true },
+          })) as any;
+          expect(user.saved.map((r: { id: any }) => r.id).includes(recipeId)).to
+            .be.false;
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          return expect(
+            await resolvers.Mutation.unsaveRecipe(
+              null,
+              { id: "" },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          return expect(
+            await resolvers.Mutation.unsaveRecipe(
+              null,
+              { id: recipeId },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+      });
+    });
+    describe("step", function () {
+      describe("createStep", function () {
+        it("should create a step", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const step = await resolvers.Mutation.createStep(
+            null,
+            {
+              recipe: recipeId,
+              step: { content: "step" },
+            },
+            { id: userId }
+          );
+          expect(step).to.have.property("content", "step");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          return expect(
+            await resolvers.Mutation.createStep(
+              null,
+              {
+                recipe: recipeId,
+                step: { content: "step" },
+              },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          return expect(
+            await resolvers.Mutation.createStep(
+              null,
+              {
+                recipe: "",
+                step: { content: "step" },
+              },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+      });
+      describe("editStep", function () {
+        it("should edit a step", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: stepId }] = await prisma.step.findMany({});
+          const step = await resolvers.Mutation.editStep(
+            null,
+            {
+              id: stepId,
+              step: { content: "step" },
+            },
+            { id: userId }
+          );
+          expect(step).to.have.property("content", "step");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: stepId }] = await prisma.step.findMany({});
+          return expect(
+            await resolvers.Mutation.editStep(
+              null,
+              {
+                id: stepId,
+                step: { content: "step" },
+              },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: stepId }] = await prisma.step.findMany({});
+          return expect(
+            await resolvers.Mutation.editStep(
+              null,
+              {
+                id: stepId,
+                step: { content: "step" },
+              },
+              { id: userId }
+            )
+          ).to.have.property("message", "Step not found");
+        });
+      });
+      describe("deleteStep", function () {
+        it("should delete a step", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: stepId }] = await prisma.step.findMany({});
+          const step = await resolvers.Mutation.deleteStep(
+            null,
+            { id: stepId },
+            { id: userId }
+          );
+          expect(step).to.have.property("id", stepId);
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: stepId }] = await prisma.step.findMany({});
+          return expect(
+            await resolvers.Mutation.deleteStep(
+              null,
+              { id: stepId },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: stepId }] = await prisma.step.findMany({});
+          return expect(
+            await resolvers.Mutation.deleteStep(
+              null,
+              { id: stepId },
+              { id: userId }
+            )
+          ).to.have.property("message", "Step not found");
+        });
+      });
+    });
+    describe("ingredient", function () {
+      describe("createIngredient", function () {
+        it("should create an ingredient", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const ingredient = await resolvers.Mutation.createIngredient(
+            null,
+            {
+              recipe: recipeId,
+              ingredient: { name: "ingredient", quantity: "1" },
+            },
+            { id: userId }
+          );
+          expect(ingredient).to.have.property("name", "ingredient");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          return expect(
+            await resolvers.Mutation.createIngredient(
+              null,
+              {
+                recipe: recipeId,
+                ingredient: { name: "ingredient", quantity: "1" },
+              },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          return expect(
+            await resolvers.Mutation.createIngredient(
+              null,
+              {
+                recipe: "",
+                ingredient: { name: "ingredient", quantity: "1" },
+              },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+      });
+      describe("editIngredient", function () {
+        it("should edit an ingredient", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: ingredientId }] = await prisma.ingredient.findMany({});
+          const ingredient = await resolvers.Mutation.editIngredient(
+            null,
+            {
+              id: ingredientId,
+              ingredient: { name: "ingredient", quantity: "1" },
+            },
+            { id: userId }
+          );
+          expect(ingredient).to.have.property("name", "ingredient");
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: ingredientId }] = await prisma.ingredient.findMany({});
+          return expect(
+            await resolvers.Mutation.editIngredient(
+              null,
+              {
+                id: ingredientId,
+                ingredient: { name: "ingredient", quantity: "1" },
+              },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the ingredient is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          return expect(
+            await resolvers.Mutation.editIngredient(
+              null,
+              {
+                id: "",
+                ingredient: { name: "ingredient", quantity: "1" },
+              },
+              { id: userId }
+            )
+          ).to.have.property("message", "Ingredient not found");
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: ingredientId }] = await prisma.ingredient.findMany({});
+          return expect(
+            await resolvers.Mutation.editIngredient(
+              null,
+              {
+                id: ingredientId,
+                ingredient: { name: "ingredient", quantity: "1" },
+              },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+      });
+      describe("deleteIngredient", function () {
+        it("should delete an ingredient", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: ingredientId }] = await prisma.ingredient.findMany({});
+          const ingredient = await resolvers.Mutation.deleteIngredient(
+            null,
+            { id: ingredientId },
+            { id: userId }
+          );
+          expect(ingredient).to.have.property("id", ingredientId);
+        });
+        it("should fail if the user is not logged in", async function () {
+          const [{ id: recipeId }] = await prisma.recipe.findMany({});
+          const [{ id: ingredientId }] = await prisma.ingredient.findMany({});
+          return expect(
+            await resolvers.Mutation.deleteIngredient(
+              null,
+              { id: ingredientId },
+              { id: "" }
+            )
+          ).to.have.property(
+            "message",
+            "You must be logged in to perform this action"
+          );
+        });
+        it("should fail if the ingredient is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          return expect(
+            await resolvers.Mutation.deleteIngredient(
+              null,
+              { id: "" },
+              { id: userId }
+            )
+          ).to.have.property("message", "Ingredient not found");
+        });
+        it("should fail if the recipe is not found", async function () {
+          const [{ id: userId }] = await prisma.user.findMany({});
+          const [{ id: ingredientId }] = await prisma.ingredient.findMany({});
+          return expect(
+            await resolvers.Mutation.deleteIngredient(
+              null,
+              { id: ingredientId },
+              { id: userId }
+            )
+          ).to.have.property("message", "Recipe not found");
+        });
+      });
+    });
   });
 });

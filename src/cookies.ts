@@ -13,7 +13,7 @@ export function cookies(res: any, id: string) {
     {
       expires: new Date(Date.now() + 60 * 60 * 1000),
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "lax" : "none",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
       secure: true,
     } as CookieOptions
   );
@@ -24,7 +24,7 @@ export function cookies(res: any, id: string) {
     {
       expires: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "lax" : "none",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
       secure: true,
     } as CookieOptions
   );

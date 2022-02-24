@@ -217,7 +217,7 @@ export default {
       }
     }
 
-    return prisma.user.update({
+    return await prisma.user.update({
       where: {
         id,
       },

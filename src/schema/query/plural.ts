@@ -4,122 +4,91 @@ export default {
   users: async (
     _ = null,
     {
-      query,
+      where,
       take,
       from,
       sort,
-    }: { query: string; take: number; from: string; sort: any },
+    }: { where: any; take: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.user.findMany({
       where: {
-        OR: [
-          {
-            name: {
-              search: query,
-            },
-          },
-          {
-            username: {
-              search: query,
-            },
-          },
-        ],
+        ...where,
       },
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        profilePicture: true,
+      },
     });
   },
   recipes: async (
     _ = null,
     {
-      query,
+      where,
       take,
       from,
       sort,
-    }: { query: string; take: number; from: string; sort: any },
+    }: { where: any; take: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.recipe.findMany({
       where: {
-        OR: [
-          {
-            name: {
-              search: query,
-            },
-          },
-          {
-            description: {
-              search: query,
-            },
-          },
-          {
-            cuisine: {
-              search: query,
-            },
-          },
-          {
-            category: {
-              search: query,
-            },
-          },
-        ],
+        ...where,
       },
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        image: true,
+        author: true,
+      },
     });
   },
   steps: async (
     _ = null,
     {
-      query,
+      where,
       take,
       from,
       sort,
-    }: { query: string; take: number; from: string; sort: any },
+    }: { where: any; take: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.step.findMany({
       where: {
-        OR: [
-          {
-            name: {
-              search: query,
-            },
-          },
-          {
-            content: {
-              search: query,
-            },
-          },
-        ],
+        ...where,
       },
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        image: true,
+        recipe: true,
+      },
     });
   },
   ingredients: async (
     _ = null,
     {
-      query,
+      where,
       take,
       from,
       sort,
-    }: { query: string; take: number; from: string; sort: any },
+    }: { where: any; take: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.ingredient.findMany({
       where: {
-        name: {
-          search: query,
-        },
+        ...where,
       },
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        recipe: true,
+      },
     });
   },
 };
