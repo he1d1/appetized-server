@@ -6,9 +6,10 @@ export default {
     {
       where,
       take,
+      skip,
       from,
       sort,
-    }: { where: any; take: number; from: string; sort: any },
+    }: { where: any; take: number; skip: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.user.findMany({
@@ -16,6 +17,7 @@ export default {
         ...where,
       },
       take,
+      skip,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
       include: {
@@ -28,9 +30,10 @@ export default {
     {
       where,
       take,
+      skip,
       from,
       sort,
-    }: { where: any; take: number; from: string; sort: any },
+    }: { where: any; take: number; skip: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.recipe.findMany({
@@ -38,6 +41,7 @@ export default {
         ...where,
       },
       take,
+      skip,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
       include: {
@@ -51,9 +55,10 @@ export default {
     {
       where,
       take,
+      skip,
       from,
       sort,
-    }: { where: any; take: number; from: string; sort: any },
+    }: { where: any; take: number; skip: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.step.findMany({
@@ -61,6 +66,7 @@ export default {
         ...where,
       },
       take,
+      skip,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
       include: {
@@ -74,9 +80,10 @@ export default {
     {
       where,
       take,
+      skip,
       from,
       sort,
-    }: { where: any; take: number; from: string; sort: any },
+    }: { where: any; take: number; skip: number; from: string; sort: any },
     { req, res, id }: { req: any; res: any; id: string }
   ) => {
     return await prisma.ingredient.findMany({
@@ -84,6 +91,7 @@ export default {
         ...where,
       },
       take,
+      skip,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
       include: {

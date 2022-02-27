@@ -68,17 +68,31 @@ export default gql`
     step(id: ID!): StepResponse!
     ingredient(id: ID!): IngredientResponse!
 
-    users(where: UserFilter, take: Int, from: ID, sort: UserSort): [User]
+    users(
+      where: UserFilter
+      take: Int
+      skip: Int
+      from: ID
+      sort: UserSort
+    ): [User]
     recipes(
       where: RecipeFilter
       take: Int
+      skip: Int
       from: ID
       sort: RecipeSort
     ): [Recipe]
-    steps(where: StepFilter, take: Int, from: ID, sort: StepSort): [Step]
+    steps(
+      where: StepFilter
+      take: Int
+      skip: Int
+      from: ID
+      sort: StepSort
+    ): [Step]
     ingredients(
       where: IngredientFilter
       take: Int
+      skip: Int
       from: ID
       sort: IngredientSort
     ): [Ingredient]

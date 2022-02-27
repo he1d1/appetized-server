@@ -20,11 +20,22 @@ export default {
   },
 
   recipesCount: async (parent: any) => {
-    return await prisma.recipe.count({
-      where: {
-        authorId: parent.id,
-      },
-    });
+    return await prisma.user
+      .findUnique({
+        where: {
+          id: parent.id,
+        },
+        select: {
+          _count: {
+            select: {
+              recipes: true,
+            },
+          },
+        },
+      })
+      .then((res) => {
+        return res?._count.recipes;
+      });
   },
 
   savedRecipes: async (
@@ -68,15 +79,22 @@ export default {
   },
 
   followerCount: async (parent: any) => {
-    return await prisma.user.count({
-      where: {
-        following: {
-          some: {
-            id: parent.id,
+    return await prisma.user
+      .findUnique({
+        where: {
+          id: parent.id,
+        },
+        select: {
+          _count: {
+            select: {
+              followers: true,
+            },
           },
         },
-      },
-    });
+      })
+      .then((res) => {
+        return res?._count.followers;
+      });
   },
 
   following: async (
@@ -98,14 +116,21 @@ export default {
   },
 
   followingCount: async (parent: any) => {
-    return await prisma.user.count({
-      where: {
-        followers: {
-          some: {
-            id: parent.id,
+    return await prisma.user
+      .findUnique({
+        where: {
+          id: parent.id,
+        },
+        select: {
+          _count: {
+            select: {
+              following: true,
+            },
           },
         },
-      },
-    });
+      })
+      .then((res) => {
+        return res?._count.following;
+      });
   },
 };
