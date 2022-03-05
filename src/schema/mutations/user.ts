@@ -7,12 +7,16 @@ export default {
     _ = null,
     {
       user,
+      image,
     }: {
       user: {
         name?: string;
         username: string;
         email: string;
         password: string;
+      };
+      image: {
+        base64: string;
       };
     }
   ) => {
@@ -36,6 +40,50 @@ export default {
         code: 400,
         message: "Password is required",
       };
+    }
+
+    // Image buffer stores the decoded base64 image.
+    let imageBuffer;
+    // Check if there is an image
+    if (image?.base64) {
+      // Check if the image is a valid base64 string
+      try {
+        imageBuffer = Buffer.from(image.base64.split(",")[1], "base64");
+        if (imageBuffer.length > 1000000) {
+          return {
+            code: 400,
+            message: "Image is too large",
+          };
+        }
+      } catch (e) {
+        return {
+          code: 400,
+          message: "Image is not a valid base64 string",
+        };
+      }
+
+      // Check the image file type
+      const imageType = image.base64.split(";")[0].split("/")[1];
+      if (!["jpeg", "png", "jpg"].includes(imageType)) {
+        return {
+          code: 400,
+          message: "Image type is not supported",
+        };
+      }
+
+      // Check if the image is a valid image
+      // Image is valid if it starts with data:image/
+      // then has a file type of jpeg, png, or jpg
+      // then has a semicolon
+      // then says base64
+      // then has a comma
+
+      if (imageBuffer.toString().match(/^data:image\/[a-zA-Z]+;base64,/)) {
+        return {
+          code: 400,
+          message: "Image is not a valid image",
+        };
+      }
     }
 
     //Check username is valid
@@ -141,22 +189,92 @@ export default {
 
     user.password = await argon2.hash(user.password);
 
-    return await prisma.user.create({
-      data: {
-        ...user,
-        // TODO add email verification
-        emailVerified: true,
-      },
-    });
+    if (!imageBuffer) {
+      return await prisma.user.create({
+        data: {
+          ...user,
+          // TODO add email verification
+          emailVerified: true,
+        },
+      });
+    } else {
+      // Generate userID
+      const { id } = await prisma.user.create({
+        data: {
+          ...user,
+          // TODO add email verification
+          emailVerified: true,
+        },
+      });
+
+      // Upload image to S3
+      const imageName = `${id}/profile.${
+        image.base64.toString().split(";")[0].split("/")[1]
+      }`;
+
+      try {
+        s3.putObject(
+          {
+            Bucket: process.env.AWS_S3_BUCKET ?? "",
+            Key: imageName,
+            Body: imageBuffer,
+            ContentEncoding: "base64",
+            ContentType: image.base64.split(";")[0],
+          },
+          (err, data) => {
+            if (err) {
+              throw err;
+            }
+          }
+        );
+      } catch (error) {
+        // Delete user if image upload fails
+        await prisma.user.delete({
+          where: {
+            id,
+          },
+        });
+
+        console.error(error);
+
+        return {
+          code: 500,
+          message: "Error uploading image to S3",
+        };
+      }
+      // Update user with image
+      return await prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          profilePicture: {
+            create: {
+              url:
+                (process.env.CDN_URL ??
+                  `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
+                    process.env.AWS_REGION
+                  }.amazonaws.com`) +
+                "/" +
+                imageName,
+            },
+          },
+        },
+      });
+    }
   },
   editUser: async (
     _ = null,
     {
-      user: { name, username },
+      user,
+      image,
     }: {
       user: {
-        name: string;
-        username: string;
+        name?: string;
+        username?: string;
+      };
+      image: {
+        base64: string;
       };
     },
     { id }: { id: string }
@@ -169,7 +287,24 @@ export default {
       };
     }
 
+    let name = user?.name,
+      username = user?.username;
+
     if (username) {
+      // Check if username is taken
+      if (
+        await prisma.user.findFirst({
+          where: {
+            username,
+          },
+        })
+      ) {
+        return {
+          code: 400,
+          message: "Username is taken",
+        };
+      }
+
       //Check username is valid
       if (username.length < 3) {
         return {
@@ -201,31 +336,125 @@ export default {
             "Username must start and end with an lowercase letter or number",
         };
       }
+    }
 
-      // Check if username is taken
-      if (
-        await prisma.user.findFirst({
-          where: {
-            username,
-          },
-        })
-      ) {
+    // Image buffer stores the decoded base64 image.
+    let imageBuffer;
+    // Check if there is an image
+    if (image?.base64) {
+      // Check if the image is a valid base64 string
+
+      try {
+        imageBuffer = Buffer.from(image.base64.split(",")[1], "base64");
+        if (imageBuffer.length > 1000000) {
+          return {
+            code: 400,
+            message: "Image is too large",
+          };
+        }
+      } catch (e) {
         return {
           code: 400,
-          message: "Username is taken",
+          message: "Image is not a valid base64 string",
+        };
+      }
+      // Check the image file type
+      const imageType = image.base64.split(";")[0].split("/")[1];
+      if (!["jpeg", "png", "jpg"].includes(imageType)) {
+        return {
+          code: 400,
+          message: "Image type is not supported",
+        };
+      }
+
+      // Check if the image is a valid image
+      // Image is valid if it starts with data:image/
+      // then has a file type of jpeg, png, or jpg
+      // then has a semicolon
+      // then says base64
+      // then has a comma
+      if (imageBuffer.toString().match(/^data:image\/[a-zA-Z]+;base64,/)) {
+        return {
+          code: 400,
+          message: "Image is not a valid image",
         };
       }
     }
 
-    return await prisma.user.update({
-      where: {
-        id,
-      },
-      data: {
-        name: name,
-        username: username,
-      },
-    });
+    if (!imageBuffer) {
+      return await prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          name: name,
+          username: username,
+        },
+      });
+    } else {
+      // Upload image to S3
+      const imageName = `${id}/profile.${
+        image.base64.toString().split(";")[0].split("/")[1]
+      }`;
+
+      try {
+        s3.putObject(
+          {
+            Bucket: process.env.AWS_S3_BUCKET ?? "",
+            Key: imageName,
+            Body: imageBuffer,
+            ContentEncoding: "base64",
+            ContentType: image.base64.split(";")[0],
+          },
+          (err, data) => {
+            if (err) {
+              throw err;
+            }
+          }
+        );
+      } catch (error) {
+        console.error(error);
+
+        return {
+          code: 500,
+          message: "Error uploading image to S3",
+        };
+      }
+      // Update user with image
+      // Generate userID
+      return await prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          name: name,
+          username: username,
+          profilePicture: {
+            upsert: {
+              create: {
+                url:
+                  (process.env.CDN_URL ??
+                    `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
+                      process.env.AWS_REGION
+                    }.amazonaws.com`) +
+                  "/" +
+                  imageName,
+              },
+
+              update: {
+                url:
+                  (process.env.CDN_URL ??
+                    `https://${process.env.AWS_S3_BUCKET ?? ""}.s3.${
+                      process.env.AWS_REGION
+                    }.amazonaws.com`) +
+                  "/" +
+                  imageName,
+              },
+            },
+          },
+        },
+      });
+    }
   },
   deleteUser: async (_ = null, __ = null, { id }: { id: string }) => {
     if (!id) {
