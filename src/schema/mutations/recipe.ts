@@ -16,7 +16,7 @@ export default {
         cookTime?: number;
         prepTime?: number;
       };
-      image: {
+      image?: {
         base64: string;
       };
     },
@@ -100,7 +100,7 @@ export default {
       });
       // Upload image to S3
       const imageName = `${args.id}/${id}/cover.${
-        image.base64.toString().split(";")[0].split("/")[1]
+        image?.base64.toString().split(";")[0].split("/")[1]
       }`;
 
       try {
@@ -110,7 +110,7 @@ export default {
             Key: imageName,
             Body: imageBuffer,
             ContentEncoding: "base64",
-            ContentType: image.base64.split(";")[0],
+            ContentType: image?.base64.split(";")[0],
           },
           (err, data) => {
             if (err) {
@@ -169,7 +169,7 @@ export default {
         cookTime?: number;
         prepTime?: number;
       };
-      image: {
+      image?: {
         base64: string;
       };
     },
@@ -261,7 +261,7 @@ export default {
     } else {
       // Upload image to S3
       const imageName = `${args.id}/${id}/cover.${
-        image.base64.toString().split(";")[0].split("/")[1]
+        image?.base64.toString().split(";")[0].split("/")[1]
       }`;
 
       try {
@@ -271,7 +271,7 @@ export default {
             Key: imageName,
             Body: imageBuffer,
             ContentEncoding: "base64",
-            ContentType: image.base64.split(";")[0],
+            ContentType: image?.base64.split(";")[0],
           },
           (err, data) => {
             if (err) {

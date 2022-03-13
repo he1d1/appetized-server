@@ -11,7 +11,7 @@ export default {
     }: {
       recipe: string;
       step: { name?: string; content: string };
-      image: { base64: string };
+      image?: { base64: string };
     },
     args: { id: string }
   ) => {
@@ -110,7 +110,7 @@ export default {
       });
       // Upload image to S3
       const imageName = `${args.id}/${recipe}/${id}.${
-        image.base64.toString().split(";")[0].split("/")[1]
+        image?.base64.toString().split(";")[0].split("/")[1]
       }`;
 
       try {
@@ -120,7 +120,7 @@ export default {
             Key: imageName,
             Body: imageBuffer,
             ContentEncoding: "base64",
-            ContentType: image.base64.split(";")[0],
+            ContentType: image?.base64.split(";")[0],
           },
           (err, data) => {
             if (err) {
@@ -172,7 +172,7 @@ export default {
     }: {
       id: string;
       step: { name?: string; content: string };
-      image: { base64: string };
+      image?: { base64: string };
     },
     args: { id: string }
   ) => {
@@ -270,7 +270,7 @@ export default {
     } else {
       // Upload image to S3
       const imageName = `${args.id}/${recipeExists.recipe.id}/${id}.${
-        image.base64.toString().split(";")[0].split("/")[1]
+        image?.base64.toString().split(";")[0].split("/")[1]
       }`;
 
       try {
@@ -280,7 +280,7 @@ export default {
             Key: imageName,
             Body: imageBuffer,
             ContentEncoding: "base64",
-            ContentType: image.base64.split(";")[0],
+            ContentType: image?.base64.split(";")[0],
           },
           (err, data) => {
             if (err) {

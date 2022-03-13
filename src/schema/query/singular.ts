@@ -58,7 +58,11 @@ export default {
       (await prisma.recipe.findUnique({
         where: { id: id },
         include: {
-          author: true,
+          author: {
+            include: {
+              profilePicture: true,
+            },
+          },
           image: true,
         },
       })) ?? {
