@@ -65,7 +65,7 @@ export default {
       where: {
         ...where,
       },
-      take,
+      take: take ?? undefined,
       skip,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
