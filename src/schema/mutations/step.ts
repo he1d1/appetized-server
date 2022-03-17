@@ -84,11 +84,32 @@ export default {
       }
     }
 
+    // Work out position of step
+    const steps = await prisma.step.findMany({
+      where: {
+        recipe: {
+          id: recipe,
+        },
+      },
+      take: 1,
+      orderBy: {
+        position: "desc",
+      },
+      select: {
+        position: true,
+      },
+    });
+
+    // If there are no steps, set position to 1
+    // Otherwise, set position to the position of the last step + 1
+    let position = (steps?.[0] ?? [{ position: 0 }]).position + 1;
+
     // Create step
     if (!imageBuffer) {
       return await prisma.step.create({
         data: {
           ...step,
+          position,
           recipe: {
             connect: {
               id: recipe,
@@ -101,6 +122,7 @@ export default {
       const { id } = await prisma.step.create({
         data: {
           ...step,
+          position,
           recipe: {
             connect: {
               id: recipe,
@@ -169,10 +191,12 @@ export default {
       id,
       step,
       image,
+      position,
     }: {
       id: string;
       step: { name?: string; content: string };
       image?: { base64: string };
+      position?: number;
     },
     args: { id: string }
   ) => {
@@ -210,6 +234,40 @@ export default {
       return {
         code: 403,
         message: "You are not authorized to edit this step",
+      };
+    }
+
+    let positions = await prisma.step.findMany({
+      where: {
+        recipe: {
+          id: recipeExists?.recipe?.id,
+        },
+      },
+      select: {
+        position: true,
+      },
+      take: 1,
+      orderBy: {
+        position: "desc",
+      },
+    });
+
+    // Check if position is valid
+    // This is the case if:
+    // - position is not provided
+    // - position is inside the range of existing steps
+    // - position is one more than the position of the last step
+    if (
+      // position is not provided
+      position === undefined ||
+      // position is inside the range of existing steps
+      (position > 0 &&
+        // position is one more than the position of the last step
+        position <= (positions?.[0] ?? [{ position: 1 }]).position)
+    ) {
+      return {
+        code: 400,
+        message: "Invalid position",
       };
     }
 
@@ -255,6 +313,37 @@ export default {
           message: "Image is not a valid image",
         };
       }
+    }
+
+    // Update position
+    if (position !== undefined) {
+      // Swap positions of steps
+      await prisma.step.updateMany({
+        where: {
+          recipe: {
+            id: recipeExists?.recipe?.id,
+          },
+          position: {
+            gt: position,
+          },
+        },
+        data: {
+          position: {
+            increment: 1,
+          },
+        },
+      });
+
+      // Update step
+      return await prisma.step.update({
+        where: {
+          id: id,
+        },
+        data: {
+          position,
+          ...step,
+        },
+      });
     }
 
     // Update step
@@ -346,8 +435,10 @@ export default {
         id: id,
       },
       select: {
+        position: true,
         recipe: {
           select: {
+            id: true,
             authorId: true,
           },
         },
@@ -369,10 +460,29 @@ export default {
     }
 
     // Update step
-    return await prisma.step.delete({
-      where: {
-        id,
-      },
-    });
+    return await prisma.step
+      .delete({
+        where: {
+          id,
+        },
+      })
+      .then(async () => {
+        // Update positions of remaining steps
+        await prisma.step.updateMany({
+          where: {
+            recipe: {
+              id: recipeExists?.recipe?.id,
+            },
+            position: {
+              gt: recipeExists?.position,
+            },
+          },
+          data: {
+            position: {
+              increment: -1,
+            },
+          },
+        });
+      });
   },
 };

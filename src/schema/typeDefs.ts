@@ -41,6 +41,7 @@ export default gql`
   }
 
   type Step {
+    position: Int!
     id: ID!
     name: String
     createdAt: String
@@ -118,7 +119,12 @@ export default gql`
     unsaveRecipe(id: ID!): RecipeResponse!
 
     createStep(recipe: ID!, step: StepInput, image: ImageInput): StepResponse!
-    editStep(id: ID!, step: StepInput, image: ImageInput): StepResponse!
+    editStep(
+      id: ID!
+      step: StepInput
+      image: ImageInput
+      position: Int
+    ): StepResponse!
     deleteStep(id: ID!): Boolean!
 
     createIngredient(

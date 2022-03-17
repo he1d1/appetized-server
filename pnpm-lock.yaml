@@ -32,6 +32,7 @@ specifiers:
   pg: ^8.7.3
   prettier: ^2.5.1
   prettier-plugin-prisma: ^3.10.0
+  prettier-plugin-svelte: ^2.6.0
   prisma: ^3.10.0
   reflect-metadata: ^0.1.13
   tedis: ^0.1.12
@@ -80,6 +81,7 @@ devDependencies:
   nyc: 15.1.0
   prettier: 2.5.1
   prettier-plugin-prisma: 3.10.0_prettier@2.5.1
+  prettier-plugin-svelte: 2.6.0_prettier@2.5.1
   prisma: 3.10.0
   ts-jest: 27.1.3_60149d457e34ffba7d4e845dde6a1263
   ts-mocha: 9.0.2_mocha@9.2.1
@@ -3881,6 +3883,15 @@ packages:
       prettier: '>=2'
     dependencies:
       '@prisma/prisma-fmt-wasm': 3.10.0-50.73e60b76d394f8d37d8ebd1f8918c79029f0db86
+      prettier: 2.5.1
+    dev: true
+
+  /prettier-plugin-svelte/2.6.0_prettier@2.5.1:
+    resolution: {integrity: sha512-NPSRf6Y5rufRlBleok/pqg4+1FyGsL0zYhkYP6hnueeL1J/uCm3OfOZPsLX4zqD9VAdcXfyEL2PYqGv8ZoOSfA==}
+    peerDependencies:
+      prettier: ^1.16.4 || ^2.0.0
+      svelte: ^3.2.0
+    dependencies:
       prettier: 2.5.1
     dev: true
 
