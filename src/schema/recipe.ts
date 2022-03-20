@@ -14,6 +14,9 @@ export default {
       take,
       cursor: from ? { id: from } : undefined,
       orderBy: sort,
+      include: {
+        image: true,
+      },
     });
   },
   ingredients: async (

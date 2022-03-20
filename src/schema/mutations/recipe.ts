@@ -356,11 +356,13 @@ export default {
     }
 
     // Delete recipe
-    return await prisma.recipe.delete({
+    await prisma.recipe.delete({
       where: {
         id,
       },
     });
+
+    return true;
   },
   saveRecipe: async (
     _ = null,

@@ -102,7 +102,7 @@ export default {
 
     // If there are no steps, set position to 1
     // Otherwise, set position to the position of the last step + 1
-    let position = (steps?.[0] ?? [{ position: 0 }]).position + 1;
+    let position = (steps?.[0]?.position ?? 0) + 1;
 
     // Create step
     if (!imageBuffer) {
@@ -223,6 +223,8 @@ export default {
       },
     });
 
+    console.log(position);
+
     if (!recipeExists) {
       return {
         code: 404,
@@ -252,25 +254,22 @@ export default {
       },
     });
 
+    console.log(positions[0].position);
+
     // Check if position is valid
     // This is the case if:
     // - position is not provided
     // - position is inside the range of existing steps
     // - position is one more than the position of the last step
     if (
-      // position is not provided
-      position === undefined ||
-      // position is inside the range of existing steps
-      (position > 0 &&
-        // position is one more than the position of the last step
-        position <= (positions?.[0] ?? [{ position: 1 }]).position)
+      position !== undefined &&
+      !(position > 0 && position <= positions[0].position)
     ) {
       return {
         code: 400,
-        message: "Invalid position",
+        message: "Position is not valid",
       };
     }
-
     // Image buffer stores the decoded base64 image.
     let imageBuffer;
     // Check if there is an image
@@ -318,31 +317,62 @@ export default {
     // Update position
     if (position !== undefined) {
       // Swap positions of steps
-      await prisma.step.updateMany({
-        where: {
-          recipe: {
-            id: recipeExists?.recipe?.id,
+      // This can be done by:
+      // - deleting the step with the new position
+      // - updating the step with the old position
+      // - creating the step with the old position
+      await prisma.$transaction(async (prisma) => {
+        const old = await prisma.step.delete({
+          where: {
+            recipeId_position: {
+              position,
+              recipeId: recipeExists?.recipe?.id,
+            },
           },
-          position: {
-            gt: position,
+          include: {
+            image: true,
           },
-        },
-        data: {
-          position: {
-            increment: 1,
-          },
-        },
-      });
+        });
 
-      // Update step
-      return await prisma.step.update({
-        where: {
-          id: id,
-        },
-        data: {
-          position,
-          ...step,
-        },
+        const oldPosition = (await prisma.step.findUnique({
+          where: {
+            id,
+          },
+          select: {
+            position: true,
+          },
+        })) as { position: number };
+
+        await prisma.step.update({
+          where: {
+            id,
+          },
+          data: {
+            position,
+          },
+        });
+
+        await prisma.step.create({
+          data: {
+            id: old.id,
+            name: old?.name ?? undefined,
+            content: old.content,
+            createdAt: old.createdAt,
+            image: old?.image
+              ? {
+                  connect: {
+                    id: old.image?.id,
+                  },
+                }
+              : undefined,
+            recipe: {
+              connect: {
+                id: recipeExists?.recipe?.id,
+              },
+            },
+            position: oldPosition.position,
+          },
+        });
       });
     }
 
@@ -460,29 +490,31 @@ export default {
     }
 
     // Update step
-    return await prisma.step
-      .delete({
-        where: {
-          id,
+    await prisma.step.delete({
+      where: {
+        id,
+      },
+    });
+
+    console.log(recipeExists);
+
+    // Update positions of remaining steps
+    await prisma.step.updateMany({
+      where: {
+        recipe: {
+          id: recipeExists?.recipe?.id,
         },
-      })
-      .then(async () => {
-        // Update positions of remaining steps
-        await prisma.step.updateMany({
-          where: {
-            recipe: {
-              id: recipeExists?.recipe?.id,
-            },
-            position: {
-              gt: recipeExists?.position,
-            },
-          },
-          data: {
-            position: {
-              increment: -1,
-            },
-          },
-        });
-      });
+        position: {
+          gt: recipeExists?.position,
+        },
+      },
+      data: {
+        position: {
+          decrement: 1,
+        },
+      },
+    });
+
+    return true;
   },
 };

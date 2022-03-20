@@ -63,18 +63,18 @@ model Step {
   content   String
   image     Image?   @relation(fields: [imageId], references: [id])
   imageId   String?  @unique
-  recipe    Recipe?  @relation(fields: [recipeId], references: [id])
-  recipeId  String?
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  recipeId  String
 
   @@unique([recipeId, position])
   @@fulltext([name, content])
 }
 
 model Ingredient {
-  id       String  @id @default(uuid())
+  id       String @id @default(uuid())
   name     String
   quantity String
-  recipe   Recipe? @relation(fields: [recipeId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
   recipeId String
 
   @@fulltext([name])
